@@ -1,16 +1,16 @@
-# This is a sample Python script.
+from multiprocessing import Process
+import os
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import pandas as pd
+
+dev = qml.device("default.qubit", wires=1)
+
+@qml.qnode(dev)
+def quantum_circ(x, theta):
+    qml.RX(x, wires=0)
+    qml.RZ(theta, wires=0)
+    return qml.expval(qml.PauliZ(0))
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+g = qml.gradients.param_shift(quantum_circ)
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
