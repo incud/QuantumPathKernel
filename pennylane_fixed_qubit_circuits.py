@@ -1,5 +1,5 @@
 """
-For now the circuit are specified only for N=2 qubits. If there is the need to generalize to N=3, 4, 5, ... qubits
+For now the circuit are specified only for N=xxx qubits. If there is the need to generalize to N=3, 4, 5, ... qubits
 it might be interesting to create a class that gets N as input and instantiate the devices, functions etc.
 """
 import numpy as np
@@ -8,22 +8,22 @@ from pennylane import numpy as pnp
 from pennylane_circuits import ZZFeatureMap, ShiraiLayerAnsatz
 from pennylane.optimize import AdamOptimizer, GradientDescentOptimizer
 import pandas as pd
-from joblib import Parallel
+from joblib import Parallel, delayed
 
-N_QUBITS = 2
-device_2qubits = qml.device("default.qubit", wires=N_QUBITS, parallel=True)
+N_QUBITS = 3
+device_fixed_qubits = qml.device("default.qubit", wires=N_QUBITS)
 projector = pnp.zeros((2**N_QUBITS, 2**N_QUBITS))
 projector[0, 0] = 1
 
 
-@qml.qnode(device_2qubits)
+@qml.qnode(device_fixed_qubits)
 def zz_kernel(x1, x2):
     ZZFeatureMap(x1, reps=1, wires=range(N_QUBITS))
     qml.adjoint(ZZFeatureMap)(x2, reps=1, wires=range(N_QUBITS))
     return qml.expval(qml.Hermitian(projector, wires=range(N_QUBITS)))
 
 
-@qml.qnode(device_2qubits)
+@qml.qnode(device_fixed_qubits)
 def shirai_circuit(x, theta, layers):
     # quantum feature map (Havlicek)
     ZZFeatureMap(x, 1, range(N_QUBITS))
@@ -34,7 +34,7 @@ def shirai_circuit(x, theta, layers):
     return qml.expval(qml.PauliZ(N_QUBITS-1))
 
 
-@qml.qnode(device_2qubits)
+@qml.qnode(device_fixed_qubits)
 def datareup_circuit(x, theta, layers):
     for l in range(layers):
         # quantum feature map (Havlicek)
@@ -179,8 +179,9 @@ def path_kernel_function(x1, x2, training_df, thread_parallel=False, thread_jobs
     gradient = training_df.loc[0]['gradient']
     params_epochs = training_df['this_params'].to_numpy()
     if thread_parallel:
+        contrib_run = lambda params: linearized_shirai_kernel_function(x1, x2, gradient, params)
         contributions = Parallel(n_jobs=thread_jobs, prefer="threads")(
-            linearized_shirai_kernel_function(x1, x2, gradient, params) for params in params_epochs)
+            delayed(contrib_run)(params) for params in params_epochs)
     else:
         contributions = [
             linearized_shirai_kernel_function(x1, x2, gradient, params) for params in params_epochs]

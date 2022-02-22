@@ -3,7 +3,7 @@ from sklearn.preprocessing import KernelCenterer, MinMaxScaler
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from sklearn import svm
 import numpy as np
-from joblib import Parallel
+from joblib import Parallel, delayed
 
 
 def kernel_alignment(K1, K2):
@@ -35,10 +35,14 @@ def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, thread_parallel=
     # check dimension
     n, m = x_list_1.shape[0], x_list_2.shape[0]
 
+    print("###", x_list_1)
+    print("#-#", x_list_2)
+
     # i know, for Xtrain only the matrix is symmetric... but can we check it afterwards?
     if thread_parallel:
+        gram_row_run = lambda i: [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)]
         gram_matrix = Parallel(n_jobs=thread_jobs, prefer="threads")(
-            [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)] for i in range(n))
+            delayed(gram_row_run)(i) for i in range(n))
     else:
         gram_matrix = [
             [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)] for i in range(n)]
