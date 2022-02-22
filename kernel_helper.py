@@ -3,6 +3,7 @@ from sklearn.preprocessing import KernelCenterer, MinMaxScaler
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from sklearn import svm
 import numpy as np
+from joblib import Parallel
 
 
 def kernel_alignment(K1, K2):
@@ -21,25 +22,28 @@ def kernel_target_alignment(K, y):
     return kernel_alignment(K, yyt)
 
 
-def build_gram_matrix(kernel_function, x_list_1, x_list_2=None):
+def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, thread_parallel=True, thread_jobs=16):
     """Build the Gram matrix associated with the given kernel"""
     # check if only the input X is given or both Xtrain and Xtest
     if x_list_2 is None:
         x_list_2 = x_list_1
 
     # number of features must be equal
-    assert x_list_1.shape[1] == x_list_2.shape[1], "The second dimension must be equal (for IRIS must be 4)"
+    assert x_list_1.shape[1] == x_list_2.shape[1], \
+        "The second dimension (number of features) must be equal for both lists"
 
     # check dimension
     n, m = x_list_1.shape[0], x_list_2.shape[0]
-    gram_matrix = np.zeros((n, m))
 
     # i know, for Xtrain only the matrix is symmetric... but can we check it afterwards?
-    for i in range(n):
-        for j in range(m):
-            gram_matrix[i][j] = kernel_function(x_list_1[i], x_list_2[j])
+    if thread_parallel:
+        gram_matrix = Parallel(n_jobs=thread_jobs, prefer="threads")(
+            [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)] for i in range(n))
+    else:
+        gram_matrix = [
+            [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)] for i in range(n)]
 
-    return gram_matrix
+    return np.array(gram_matrix)
 
 
 def get_svm_metrics(gram_train, gram_test, y_train, y_test):
