@@ -6,6 +6,11 @@ def read_json(file_path):
         return json.load(f)
 
 
+def write_json(file_path, dict_obj):
+    with open(file_path, "w") as f:
+        return json.dump(dict_obj, f)
+
+
 def get_config(key):
     return config_dict[key]
 
