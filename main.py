@@ -44,15 +44,17 @@ def main():
     ZZ_kernel_test = build_gram_matrix(zz_kernel, X_test, X_train)
     pnp.savetxt("output/haberman/zz_kernel_matrices/ZZ_kernel_test.csv", ZZ_kernel_test, delimiter=",")
 
+    run_path_kernel_process(X_train, X_test, y_train, y_test, 1)
+
     # define and train on multiple processes - one process per layer of QNN
-    print("Starting processes...")
-    processes = [Process(
-        target=run_path_kernel_process, args=(X_train, X_test, y_train, y_test, i+1)) for i in range(N_LAYERS)]
-    # start all processes
-    for i in range(N_LAYERS):
-        processes[i].start()
-    # wait until each process is in READY state (meaning it has terminated)
-    connection.wait(p.sentinel for p in processes)
+    # print("Starting processes...")
+    # processes = [Process(
+    #     target=run_path_kernel_process, args=(X_train, X_test, y_train, y_test, i+1)) for i in range(N_LAYERS)]
+    # # start all processes
+    # for i in range(N_LAYERS):
+    #     processes[i].start()
+    # # wait until each process is in READY state (meaning it has terminated)
+    # connection.wait(p.sentinel for p in processes)
     print("Ended!")
 
 

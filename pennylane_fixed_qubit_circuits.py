@@ -26,7 +26,7 @@ def zz_kernel(x1, x2):
 @qml.qnode(device_fixed_qubits)
 def shirai_circuit(x, theta, layers):
     # quantum feature map (Havlicek)
-    ZZFeatureMap(x, 1, range(N_QUBITS))
+    ZZFeatureMap(x, range(N_QUBITS), reps=1)
     for l in range(layers):
         # Shirai's ansatz
         ShiraiLayerAnsatz(theta[l], range(N_QUBITS))
@@ -38,11 +38,18 @@ def shirai_circuit(x, theta, layers):
 def datareup_circuit(x, theta, layers):
     for l in range(layers):
         # quantum feature map (Havlicek)
-        ZZFeatureMap(x, 1, range(N_QUBITS))
+        ZZFeatureMap(x, range(N_QUBITS), reps=1)
         # Shirai's ansatz
         ShiraiLayerAnsatz(theta[l], range(N_QUBITS))
     # measurement  - just the last qubit
     return qml.expval(qml.PauliZ(N_QUBITS-1))
+
+
+_shirai_circuit_gradient = qml.gradients.param_shift(shirai_circuit)
+
+
+def shirai_circuit_gradient():
+    return _shirai_circuit_gradient
 
 
 def iterate_minibatches(inputs, targets, batch_size):
@@ -72,7 +79,7 @@ def train_shirai_circuit(X_train, X_test, y_train, y_test, opt, layers=1, batch_
 
     df = pd.DataFrame(
         columns=['this_epoch', 'this_params', 'this_cost', 'this_train_accuracy', 'this_test_accuracy',
-                 'batch_size', 'layers', 'epochs', 'gradient'])
+                 'batch_size', 'layers', 'epochs'])
 
     def get_cost_item(the_params, xi, yi):
         return (shirai_circuit(xi, the_params, layers) - yi)**2
@@ -89,9 +96,6 @@ def train_shirai_circuit(X_train, X_test, y_train, y_test, opt, layers=1, batch_
     def get_accuracy(the_params, X_set, y_set):
         return sum([get_accuracy_item(the_params, xi, yi) for (xi, yi) in zip(X_set, y_set)]) / len(y_set)
 
-    # calculate gradient once (for comfort, i can save the object for each epoch)
-    shirai_gradient = qml.gradients.param_shift(shirai_circuit)
-
     def create_trace_row(the_params, the_epoch):
         return {
             'this_epoch': the_epoch,
@@ -101,8 +105,7 @@ def train_shirai_circuit(X_train, X_test, y_train, y_test, opt, layers=1, batch_
             'this_test_accuracy': get_accuracy(the_params, X_test, y_test),
             'batch_size': batch_size,
             'layers': layers,
-            'epochs': epochs,
-            'gradient': shirai_gradient
+            'epochs': epochs
         }
 
     # generate initial thetas from gaussian distribution mean=0 var=1
@@ -161,7 +164,8 @@ def ntk_shirai_kernel_function(x1, x2, last_training_row):
     :param last_training_row: last row of training dataframe
     :return: NTK between x1 and x2
     """
-    gradient = last_training_row['gradient']
+
+    gradient = shirai_circuit_gradient()
     params = last_training_row['this_params']
     return linearized_shirai_kernel_function(x1, x2, gradient, params)
 
@@ -176,7 +180,7 @@ def path_kernel_function(x1, x2, training_df, thread_parallel=False, thread_jobs
     :param thread_jobs: if thread_parallel is True than indicates the number of threads, otherwise ignore
     :return: PATH KERNEL between x1 and x2
     """
-    gradient = training_df.loc[0]['gradient']
+    gradient = shirai_circuit_gradient()
     params_epochs = training_df['this_params'].to_numpy()
     if thread_parallel:
         contrib_run = lambda params: linearized_shirai_kernel_function(x1, x2, gradient, params)
