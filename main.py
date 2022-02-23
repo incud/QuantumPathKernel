@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
 from config_loader import get_config
-from kernel_helper import build_gram_matrix
+from kernel_helper import build_gram_matrix, get_svm_metrics
 from pennylane_fixed_qubit_circuits import zz_kernel
 from main_training import run_path_kernel_process
 
@@ -56,6 +56,22 @@ def main():
     for i in range(N_LAYERS):
         processes[i].join()
     print("Ended!")
+
+    print("Starting accuracy checking with SVMs")
+    _, ZZ_accuracy, _, _, _ = get_svm_metrics(ZZ_kernel_train, ZZ_kernel_test, y_train, y_test)
+    print(f"SVM ZZ accuracy: {ZZ_accuracy}")
+
+    for i in range(N_LAYERS):
+        NTK_kernel_train = pnp.loadtxt(f"output/haberman/ntk_kernel_matrices/NTK_kernel_LAYER_{i}_train.csv", delimiter=",")
+        NTK_kernel_test = pnp.loadtxt(f"output/haberman/ntk_kernel_matrices/NTK_kernel_LAYER_{i}_test.csv", delimiter=",")
+        _, NTK_accuracy, _, _, _ = get_svm_metrics(NTK_kernel_train, NTK_kernel_test, y_train, y_test)
+        print(f"SVM NTK accuracy with {i} layers: {NTK_accuracy}")
+
+    for i in range(N_LAYERS):
+        PK_kernel_train = pnp.loadtxt(f"output/haberman/path_kernel_matrices/PATH_kernel_LAYER_{i}_train.csv", delimiter=",")
+        PK_kernel_test = pnp.loadtxt(f"output/haberman/path_kernel_matrices/PATH_kernel_LAYER_{i}_test.csv", delimiter=",")
+        _, PK_accuracy, _, _, _ = get_svm_metrics(PK_kernel_train, PK_kernel_test, y_train, y_test)
+        print(f"SVM PK accuracy with {i} layers: {PK_accuracy}")
 
 
 if __name__ == '__main__':
