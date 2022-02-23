@@ -25,11 +25,13 @@ def zz_kernel(x1, x2):
 
 @qml.qnode(device_fixed_qubits)
 def shirai_circuit(x, theta, layers):
+    assert theta.shape == (layers, 3, 3), "Theta shape must be ({},3,3), now it is {}".format(layers, theta.shape)
     # quantum feature map (Havlicek)
     ZZFeatureMap(x, range(N_QUBITS), reps=1)
-    for l in range(layers):
+    # variational form
+    for i in range(layers):
         # Shirai's ansatz
-        ShiraiLayerAnsatz(theta[l], range(N_QUBITS))
+        ShiraiLayerAnsatz(theta[i], range(N_QUBITS))
     # measurement - just the last qubit
     return qml.expval(qml.PauliZ(N_QUBITS-1))
 
@@ -150,6 +152,7 @@ def linearized_shirai_kernel_function(x1, x2, gradient, params):
     :param params: actual theta params
     :return: grad_theta(x1, theta) * grad_theta(x2, theta)
     """
+    assert len(params.shape) == 3, f"Params must be a 3D array of shape N_LAYERS * 3 * 3 (it is {params.shape})"
     n_layer = params.shape[0]
     g1 = gradient(wrap_no_grad(x1), params, wrap_no_grad(n_layer)).reshape(-1)
     g2 = gradient(wrap_no_grad(x2), params, wrap_no_grad(n_layer)).reshape(-1)
@@ -181,13 +184,12 @@ def path_kernel_function(x1, x2, training_df, thread_parallel=False, thread_jobs
     :return: PATH KERNEL between x1 and x2
     """
     gradient = shirai_circuit_gradient()
-    params_epochs = training_df['this_params'].to_numpy()
+    params_epochs = training_df['this_params']
     if thread_parallel:
         contrib_run = lambda params: linearized_shirai_kernel_function(x1, x2, gradient, params)
         contributions = Parallel(n_jobs=thread_jobs, prefer="threads")(
             delayed(contrib_run)(params) for params in params_epochs)
     else:
-        contributions = [
-            linearized_shirai_kernel_function(x1, x2, gradient, params) for params in params_epochs]
+        contributions = [linearized_shirai_kernel_function(x1, x2, gradient, params) for params in params_epochs]
 
-    return contributions, pnp.mean(contributions)
+    return pnp.mean(contributions)

@@ -6,7 +6,7 @@ import pennylane.numpy as pnp
 from pennylane.optimize import AdamOptimizer
 from multiprocessing import Process, connection
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import normalize
+from sklearn.preprocessing import MinMaxScaler
 
 from kernel_helper import build_gram_matrix
 from pennylane_fixed_qubit_circuits import zz_kernel
@@ -29,7 +29,7 @@ def main():
     print("Dataset loaded")
 
     # preprocess dataset (normalize, choose a subset of items, etc...)
-    X = normalize(X, axis=0, norm='max')
+    X = MinMaxScaler().fit_transform(X)
 
     # split in training and testing set
     X_train, X_test, y_train, y_test = train_test_split(

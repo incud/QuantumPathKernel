@@ -28,7 +28,7 @@ def ShiraiLayerAnsatz(theta, wires):
     theta: WIRES x 3 array of parameters
     wires: the list of wires on which the circuit acts
     """
-    assert theta.shape == (len(wires), 3), "Theta must have size {}".format((len(wires), 3))
+    assert theta.shape == (len(wires), 3), "Theta must have size {} (but has shape {})".format((len(wires), 3), theta.shape)
     n = len(wires)
     for i in range(n):
         j = (i + 1) % n

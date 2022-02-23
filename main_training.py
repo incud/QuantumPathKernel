@@ -32,7 +32,7 @@ def run_path_kernel_process(X_train, X_test, y_train, y_test, n_layers):
     pnp.savetxt(f"output/haberman/ntk_kernel_matrices/NTK_kernel_LAYER_{n_layers}_test.csv", NTK_kernel_test, delimiter=",")
 
     # create PATH K. matrix
-    path_kernel = lambda x1, x2: path_kernel_function(x1, x2, training_df.iloc[len(training_df)-1])
+    path_kernel = lambda x1, x2: path_kernel_function(x1, x2, training_df)
 
     print(f"Calculating PATH K. kernel gram matrix (training set) of {n_layers} layers QNN")
     PK_kernel_train = build_gram_matrix(path_kernel, X_train)

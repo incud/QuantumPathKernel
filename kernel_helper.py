@@ -22,7 +22,7 @@ def kernel_target_alignment(K, y):
     return kernel_alignment(K, yyt)
 
 
-def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, thread_parallel=True, thread_jobs=16):
+def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, thread_parallel=False, thread_jobs=16):
     """Build the Gram matrix associated with the given kernel"""
     # check if only the input X is given or both Xtrain and Xtest
     if x_list_2 is None:
@@ -34,9 +34,6 @@ def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, thread_parallel=
 
     # check dimension
     n, m = x_list_1.shape[0], x_list_2.shape[0]
-
-    print("###", x_list_1)
-    print("#-#", x_list_2)
 
     # i know, for Xtrain only the matrix is symmetric... but can we check it afterwards?
     if thread_parallel:
