@@ -53,7 +53,8 @@ def main():
     for i in range(N_LAYERS):
         processes[i].start()
     # wait until each process is in READY state (meaning it has terminated)
-    connection.wait(p.sentinel for p in processes)
+    for i in range(N_LAYERS):
+        processes[i].join()
     print("Ended!")
 
 
