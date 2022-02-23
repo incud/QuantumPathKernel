@@ -18,8 +18,8 @@ from main_training import run_path_kernel_process
 
 
 def check_specification_dict(s_dict):
-    ALLOWED_FIELDS = set(["DATASET_NAME", "DATASET_SHUFFLE_SEED", "DATASET_PERCENT", "DATASET_TEST_PERCENTAGE",
-                         "DATASET_TEST_SEED", "MAX_LAYERS", "TRAINING_EPOCHS", "TRAINING_BATCH_SIZE", "OPTIMIZER_STR"])
+    ALLOWED_FIELDS = {"DATASET_NAME", "DATASET_SHUFFLE_SEED", "DATASET_PERCENT", "DATASET_TEST_PERCENTAGE",
+                      "DATASET_TEST_SEED", "MAX_LAYERS", "TRAINING_EPOCHS", "TRAINING_BATCH_SIZE", "OPTIMIZER_STR"}
     return s_dict.keys() == ALLOWED_FIELDS
 
 
