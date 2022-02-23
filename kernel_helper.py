@@ -24,7 +24,7 @@ def kernel_target_alignment(K, y):
     return kernel_alignment(K, yyt)
 
 
-def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, thread_parallel=True, thread_jobs=16):
+def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, thread_parallel=False, thread_jobs=16):
     """Build the Gram matrix associated with the given kernel"""
     # check if only the input X is given or both Xtrain and Xtest
     if x_list_2 is None:
@@ -39,12 +39,12 @@ def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, 
 
     # i know, for Xtrain only the matrix is symmetric... but can we check it afterwards?
     if thread_parallel:
-        gram_row_run = lambda i: [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)]
+        gram_row_run = lambda i: [float(kernel_function(x_list_1[i], x_list_2[j])) for j in range(m)]
         gram_matrix = Parallel(n_jobs=thread_jobs, prefer="threads")(
             delayed(gram_row_run)(i) for i in range(n))
     else:
         gram_matrix = [
-            [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)] for i in range(n)]
+            [float(kernel_function(x_list_1[i], x_list_2[j])) for j in range(m)] for i in range(n)]
 
     # from list to numpy
     gram_matrix = np.array(gram_matrix)
@@ -57,10 +57,10 @@ def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, 
 
 
 def build_gram_matrix_of_classical_kernels(X_train, X_test, experiment_folder):
-    gaussian_gamma0_01_kernel = lambda x1, x2: rbf_kernel(x1, x2, gamma=.01)
-    gaussian_gamma1_kernel = lambda x1, x2: rbf_kernel(x1, x2, gamma=1)
-    gaussian_gamma100_kernel = lambda x1, x2: rbf_kernel(x1, x2, gamma=100)
-    gaussian_gamma10000_kernel = lambda x1, x2: rbf_kernel(x1, x2, gamma=10000)
+    gaussian_gamma0_01_kernel = lambda x1, x2: rbf_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=.01)
+    gaussian_gamma1_kernel = lambda x1, x2: rbf_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=1)
+    gaussian_gamma100_kernel = lambda x1, x2: rbf_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=100)
+    gaussian_gamma10000_kernel = lambda x1, x2: rbf_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=10000)
     build_gram_matrix(gaussian_gamma0_01_kernel, X_train, save_path=f"{experiment_folder}/gaussian_0_01_train.csv")
     build_gram_matrix(gaussian_gamma0_01_kernel, X_train, X_test, save_path=f"{experiment_folder}/gaussian_0_01_test.csv")
     build_gram_matrix(gaussian_gamma1_kernel, X_train, save_path=f"{experiment_folder}/gaussian_1_train.csv")
@@ -70,10 +70,10 @@ def build_gram_matrix_of_classical_kernels(X_train, X_test, experiment_folder):
     build_gram_matrix(gaussian_gamma10000_kernel, X_train, save_path=f"{experiment_folder}/gaussian_10000_train.csv")
     build_gram_matrix(gaussian_gamma10000_kernel, X_train, X_test, save_path=f"{experiment_folder}/gaussian_10000_test.csv")
 
-    laplacian_gamma0_01_kernel = lambda x1, x2: laplacian_kernel(x1, x2, gamma=.01)
-    laplacian_gamma1_kernel = lambda x1, x2: laplacian_kernel(x1, x2, gamma=1)
-    laplacian_gamma100_kernel = lambda x1, x2: laplacian_kernel(x1, x2, gamma=100)
-    laplacian_gamma10000_kernel = lambda x1, x2: laplacian_kernel(x1, x2, gamma=10000)
+    laplacian_gamma0_01_kernel = lambda x1, x2: laplacian_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=.01)
+    laplacian_gamma1_kernel = lambda x1, x2: laplacian_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=1)
+    laplacian_gamma100_kernel = lambda x1, x2: laplacian_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=100)
+    laplacian_gamma10000_kernel = lambda x1, x2: laplacian_kernel(x1.reshape(1, -1), x2.reshape(1, -1), gamma=10000)
     build_gram_matrix(laplacian_gamma0_01_kernel, X_train, save_path=f"{experiment_folder}/laplacian_0_01_train.csv")
     build_gram_matrix(laplacian_gamma0_01_kernel, X_train, X_test, save_path=f"{experiment_folder}/laplacian_0_01_test.csv")
     build_gram_matrix(laplacian_gamma1_kernel, X_train, save_path=f"{experiment_folder}/laplacian_1_train.csv")
@@ -83,10 +83,10 @@ def build_gram_matrix_of_classical_kernels(X_train, X_test, experiment_folder):
     build_gram_matrix(laplacian_gamma10000_kernel, X_train, save_path=f"{experiment_folder}/laplacian_10000_train.csv")
     build_gram_matrix(laplacian_gamma10000_kernel, X_train, X_test, save_path=f"{experiment_folder}/laplacian_10000_test.csv")
 
-    poly_d1_kernel = lambda x1, x2: polynomial_kernel(x1, x2, degree=1)
-    poly_d2_kernel = lambda x1, x2: polynomial_kernel(x1, x2, degree=2)
-    poly_d3_kernel = lambda x1, x2: polynomial_kernel(x1, x2, degree=3)
-    poly_d4_kernel = lambda x1, x2: polynomial_kernel(x1, x2, degree=4)
+    poly_d1_kernel = lambda x1, x2: polynomial_kernel(x1.reshape(1, -1), x2.reshape(1, -1), degree=1)
+    poly_d2_kernel = lambda x1, x2: polynomial_kernel(x1.reshape(1, -1), x2.reshape(1, -1), degree=2)
+    poly_d3_kernel = lambda x1, x2: polynomial_kernel(x1.reshape(1, -1), x2.reshape(1, -1), degree=3)
+    poly_d4_kernel = lambda x1, x2: polynomial_kernel(x1.reshape(1, -1), x2.reshape(1, -1), degree=4)
     build_gram_matrix(poly_d1_kernel, X_train, save_path=f"{experiment_folder}/poly_d1_train.csv")
     build_gram_matrix(poly_d1_kernel, X_train, X_test, save_path=f"{experiment_folder}/poly_d1_test.csv")
     build_gram_matrix(poly_d2_kernel, X_train, save_path=f"{experiment_folder}/poly_d2_train.csv")

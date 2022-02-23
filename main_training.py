@@ -13,6 +13,7 @@ def run_path_kernel_process(X_train, X_test, y_train, y_test, n_layers, optimize
     opt = eval(optimizer_str)
 
     # start training of QNN and save trace of training to file
+    print(f"{n_layers}: Started training")
     training_path = f"{experiment_folder}/QNN_SHIRAI_layer_{n_layers}_training_trace.pickle"
     training_df = train_shirai_circuit(
         X_train, X_test, y_train, y_test, opt,
@@ -21,10 +22,14 @@ def run_path_kernel_process(X_train, X_test, y_train, y_test, n_layers, optimize
 
     # create NTK matrix
     ntk_kernel = lambda x1, x2: ntk_shirai_kernel_function(x1, x2, training_df.iloc[len(training_df)-1])
+    print(f"{n_layers}: Calculating NTK (train)")
     build_gram_matrix(ntk_kernel, X_train, save_path=f"{experiment_folder}/NTK_SHIRAI_layer_{n_layers}_train.csv")
+    print(f"{n_layers}: Calculating NTK (test)")
     build_gram_matrix(ntk_kernel, X_train, X_test, save_path=f"{experiment_folder}/NTK_SHIRAI_layer_{n_layers}_test.csv")
 
     # create PATH K. matrix
     path_kernel = lambda x1, x2: path_kernel_function(x1, x2, training_df)
+    print(f"{n_layers}: Calculating PK (train)")
     build_gram_matrix(path_kernel, X_train, save_path=f"{experiment_folder}/PK_SHIRAI_layer_{n_layers}_train.csv")
+    print(f"{n_layers}: Calculating PK (test)")
     build_gram_matrix(path_kernel, X_test, X_train, save_path=f"{experiment_folder}/PK_SHIRAI_layer_{n_layers}_test.csv")

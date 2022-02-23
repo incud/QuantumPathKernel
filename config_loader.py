@@ -7,7 +7,7 @@ def read_json(file_path):
 
 
 def write_json(file_path, dict_obj):
-    with open(file_path, "w") as f:
+    with open(file_path, "w+") as f:
         return json.dump(dict_obj, f)
 
 
