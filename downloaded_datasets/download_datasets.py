@@ -50,4 +50,6 @@ apply_pca(wine_df, n_components=6, name="wine-6PCA")
 apply_pca(wine_df, n_components=8, name="wine-8PCA")
 
 # Download PIMA (8 features + 1 target)
-download_dataset_by_id('pima', 40715)
+pima_df = download_dataset_by_id('pima', 40715)
+apply_pca(pima_df, n_components=4, name="pima-4PCA")
+apply_pca(pima_df, n_components=6, name="pima-6PCA")
