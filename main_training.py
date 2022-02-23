@@ -5,8 +5,9 @@ import pennylane.numpy as pnp
 from pennylane.optimize import AdamOptimizer
 from kernel_helper import build_gram_matrix
 from pennylane_fixed_qubit_circuits import train_shirai_circuit, ntk_shirai_kernel_function, path_kernel_function
+from config_loader import get_config
 
-EPOCHS = 2
+EPOCHS = int(get_config("EPOCHS"))
 
 
 def run_path_kernel_process(X_train, X_test, y_train, y_test, n_layers):

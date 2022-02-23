@@ -8,14 +8,15 @@ from multiprocessing import Process, connection
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
+from config_loader import get_config
 from kernel_helper import build_gram_matrix
 from pennylane_fixed_qubit_circuits import zz_kernel
 from main_training import run_path_kernel_process
 
-TRAIN_TEST_SPLIT_RANDOM_SEED = 43
-TEST_PERCENTAGE_OF_DATASET = 0.33
-N_LAYERS = 1
-# EPOCHS const is in 'main_training.py'
+
+TRAIN_TEST_SPLIT_RANDOM_SEED = int(get_config("TRAIN_TEST_SPLIT_RANDOM_SEED"))
+TEST_PERCENTAGE_OF_DATASET = float(get_config("TEST_PERCENTAGE_OF_DATASET"))
+N_LAYERS = int(get_config("N_LAYERS"))
 
 
 def main():
@@ -44,17 +45,15 @@ def main():
     ZZ_kernel_test = build_gram_matrix(zz_kernel, X_test, X_train)
     pnp.savetxt("output/haberman/zz_kernel_matrices/ZZ_kernel_test.csv", ZZ_kernel_test, delimiter=",")
 
-    run_path_kernel_process(X_train, X_test, y_train, y_test, 1)
-
     # define and train on multiple processes - one process per layer of QNN
-    # print("Starting processes...")
-    # processes = [Process(
-    #     target=run_path_kernel_process, args=(X_train, X_test, y_train, y_test, i+1)) for i in range(N_LAYERS)]
-    # # start all processes
-    # for i in range(N_LAYERS):
-    #     processes[i].start()
-    # # wait until each process is in READY state (meaning it has terminated)
-    # connection.wait(p.sentinel for p in processes)
+    print("Starting processes...")
+    processes = [Process(
+        target=run_path_kernel_process, args=(X_train, X_test, y_train, y_test, i+1)) for i in range(N_LAYERS)]
+    # start all processes
+    for i in range(N_LAYERS):
+        processes[i].start()
+    # wait until each process is in READY state (meaning it has terminated)
+    connection.wait(p.sentinel for p in processes)
     print("Ended!")
 
 
