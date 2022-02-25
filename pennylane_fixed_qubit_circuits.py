@@ -4,7 +4,7 @@ it might be interesting to create a class that gets N as input and instantiate t
 """
 import numpy as np
 import pennylane as qml
-from pennylane import numpy as pnp
+from pennylane import numpy as pnp  # -> substituted by JAX
 from pennylane_circuits import ZZFeatureMap, ShiraiLayerAnsatz
 from pennylane.optimize import AdamOptimizer, GradientDescentOptimizer
 import pandas as pd
@@ -20,6 +20,8 @@ class PathKernelSimulator:
         self.projector = pnp.zeros((2**N_QUBITS, 2**N_QUBITS))
         self.projector[0, 0] = 1
 
+        # @jax.jit  # QNode calls will now be jitted, and should run faster.
+        # @qml.qnode(self.device_fixed_qubits, diff_method="parameter-shift", interface='jax')
         @qml.qnode(self.device_fixed_qubits)
         def zz_kernel(x1, x2):
             ZZFeatureMap(x1, reps=1, wires=range(N_QUBITS))
@@ -28,6 +30,8 @@ class PathKernelSimulator:
 
         self.zz_kernel = zz_kernel
 
+        # @jax.jit  # QNode calls will now be jitted, and should run faster.
+        # @qml.qnode(self.device_fixed_qubits, diff_method="parameter-shift", interface='jax')
         @qml.qnode(self.device_fixed_qubits)
         def shirai_circuit(x, theta, layers):
             assert theta.shape == (layers, 3, 3), "Theta shape must be ({},3,3), now it is {}".format(layers, theta.shape)
@@ -42,6 +46,8 @@ class PathKernelSimulator:
 
         self.shirai_circuit = shirai_circuit
 
+        # @jax.jit  # QNode calls will now be jitted, and should run faster.
+        # @qml.qnode(self.device_fixed_qubits, diff_method="parameter-shift", interface='jax')
         @qml.qnode(self.device_fixed_qubits)
         def datareup_circuit(x, theta, layers):
             for l in range(layers):

@@ -127,7 +127,7 @@ ansatz.
 that the simulator will have. Then, you can access calculation of "ZZ" kernel, training (multiple) QNNs, 
 calculate Neural Tangent and Path Kernels. 
 
-### Main loop
+### Main
 
 
 ## TODO

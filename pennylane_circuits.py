@@ -1,5 +1,5 @@
 import pennylane as qml
-from pennylane import numpy as pnp
+from pennylane import numpy as pnp  # -> substituted by JAX
 
 
 def ZZFeatureMap(x, wires, reps=1):
