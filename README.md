@@ -129,7 +129,12 @@ calculate Neural Tangent and Path Kernels.
 
 ### Main
 
+`main_training.py` contains the function that will be launched as separate process in order to 
+study a single QNN (training, NTK and PK). 
 
-## TODO
+`main.py` read the specification file and launch all the processes. 
 
-* Add jax instead of numpy
+## Improvements
+
+* JAX does not work on Windows, yet! Some initial support exists (remove comments in ) and the gradient calculations need to be modified too (for details see: https://pennylane.readthedocs.io/en/stable/introduction/interfaces/jax.html).
+Only the files `pennylane_circuits.py` and `pennylane_fixed_qubit_circuits.py` are affected. 
