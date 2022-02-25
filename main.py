@@ -13,7 +13,7 @@ import sys
 
 from config_loader import get_config, read_json, write_json
 from kernel_helper import build_gram_matrix, build_gram_matrix_of_classical_kernels, get_metrics_for_all_kernels
-from pennylane_fixed_qubit_circuits import zz_kernel
+from pennylane_fixed_qubit_circuits import PathKernelSimulator
 from main_training import run_path_kernel_process
 
 
@@ -74,6 +74,10 @@ def run_experiment_file(specifications_dict):
     build_gram_matrix_of_classical_kernels(X_train, X_test, experiment_folder)
 
     # test ZZFeatureMap quantum kernel
+    n_qubits = X_train.shape[1]
+    print(f"The number of qubit matches the number of features ({n_qubits})")
+    sim = PathKernelSimulator(n_qubits)
+    zz_kernel = lambda x1, x2: sim.zz_kernel(x1, x2)
     print("Calculating ZZ (train)")
     build_gram_matrix(zz_kernel, X_train, save_path=f"{experiment_folder}/ZZFeatureMap_train.csv")
     print("Calculating ZZ (train)")
