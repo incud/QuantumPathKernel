@@ -23,13 +23,13 @@ to load them you can use `Pandas` but please *check* the version is the same
 as the one we use. 
 
 The available datasets are:
-* `haberman`: The data represent the survival study of patient undergone to breast cancer. 
+* `haberman`: It has 306 instances. The data represent the survival study of patient undergone to breast cancer. 
 There are three legit features: 
     * `Age_of_patient_at_time_of_operation`, 
     * `Patients_year_of_operation`,
     * `Number_of_positive_axillary_nodes_detected`. 
     * The target is `Survival_status` can be 1 (survived $\ge 5$ years) or 2 (dead $<5$ years).
-* `pima`: Study of Diabetes in Pima Indians population. There are nine features: 
+* `pima`: It has 768 instances. Study of Diabetes in Pima Indians population. There are nine features: 
     * `age`,
     * `pedi`,
     * `mass`, 
@@ -41,7 +41,7 @@ There are three legit features:
     * The target is 1 (tested negative) or 2 (tested positive). 
 * `pima-4PCA`: 4 principal components of `pima`
 * `pima-6PCA`: 6 principal components of `pima`
-* `wine`: Wine recognition task. There are 14 features, including the three-classes target
+* `wine`: Wine recognition task. It has 178 instances. There are 14 features, including the three-classes target
 * `wine-4PCA`: 4 principal components of `wine`
 * `wine-6PCA`: 6 principal components of `wine`
 * `wine-8PCA`: 8 principal components of `wine`
@@ -137,4 +137,5 @@ study a single QNN (training, NTK and PK).
 ## Improvements
 
 * JAX does not work on Windows, yet! Some initial support exists (remove comments in ) and the gradient calculations need to be modified too (for details see: https://pennylane.readthedocs.io/en/stable/introduction/interfaces/jax.html).
-Only the files `pennylane_circuits.py` and `pennylane_fixed_qubit_circuits.py` are affected. 
+Only the files `pennylane_circuits.py` and `pennylane_fixed_qubit_circuits.py` are affected
+* timestamp inizio e fine computazione

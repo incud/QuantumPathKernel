@@ -24,7 +24,7 @@ def kernel_target_alignment(K, y):
     return kernel_alignment(K, yyt)
 
 
-def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, thread_parallel=True, thread_jobs=16):
+def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, thread_parallel=True, thread_jobs=64):
     """Build the Gram matrix associated with the given kernel"""
     # check if only the input X is given or both Xtrain and Xtest
     if x_list_2 is None:

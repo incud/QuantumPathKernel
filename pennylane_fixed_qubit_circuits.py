@@ -55,7 +55,7 @@ class PathKernelSimulator:
                 ZZFeatureMap(x, range(N_QUBITS), reps=1)
                 # Shirai's ansatz
                 ShiraiLayerAnsatz(theta[l], range(N_QUBITS))
-            # measurement  - just the last qubit
+                # measurement  - just the last qubit
                 return qml.expval(qml.PauliZ(N_QUBITS-1))
 
         self.datareup_circuit = datareup_circuit
