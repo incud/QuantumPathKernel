@@ -29,8 +29,10 @@ def run_experiment_file(specifications_dict):
     :param specifications_dict: dictionary containing the specifications
     :return: None
     """
+    start_time = datetime.now()
+
     # create a sub-directory in "EXPERIMENTS_FOLDER" folder
-    experiment_subfolder = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    experiment_subfolder = start_time.strftime("%Y-%m-%d--%H-%M-%S")
     experiment_folder = get_config("EXPERIMENTS_FOLDER") + "/" + experiment_subfolder
     os.mkdir(experiment_folder)
 
@@ -62,7 +64,7 @@ def run_experiment_file(specifications_dict):
     last_index = int(len(y) * dataset_percent)
     X = X[:last_index]
     y = y[:last_index]
-    assert set(y) == set([0, 1]), f"The set of labels must contain the exact two labels 0,1 (it has {set(y)})"
+    assert set(y) == {0, 1}, f"The set of labels must contain the exact two labels 0,1 (it has {set(y)})"
 
     # split into training and testing dataset
     test_percentage = int(len(y) * float(specifications_dict["DATASET_TEST_PERCENTAGE"]))
@@ -100,6 +102,14 @@ def run_experiment_file(specifications_dict):
     # print statistics
     print("Calculating statistics")
     get_metrics_for_all_kernels(y_train, y_test, experiment_folder, MAX_LAYERS)
+
+    # print elapsed time
+    elapsed_time = datetime.now() - start_time
+
+    # save codeversion inside the experiment folver
+    elapsed_time_path = f"{experiment_folder}/elapsed.time"
+    with open(elapsed_time_path, "w+") as f:
+        f.write(str(elapsed_time.total_seconds()))
 
 
 if __name__ == '__main__':
