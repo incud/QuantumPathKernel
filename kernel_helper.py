@@ -126,6 +126,8 @@ def get_svm_metrics(gram_train, gram_test, y_train, y_test):
     # training
     clf.fit(gram_train, y_train)
     # testing
+    if len(gram_test.shape) == 1:  # if I have just one test sample... :(
+        gram_test = gram_test.reshape(1, -1)
     y_pred = clf.predict(gram_test)
     # results
     accuracy = accuracy_score(y_test, y_pred)

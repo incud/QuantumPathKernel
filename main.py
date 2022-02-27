@@ -83,7 +83,7 @@ def run_experiment_file(specifications_dict):
     zz_kernel = lambda x1, x2: sim.zz_kernel(x1, x2)
     print("Calculating ZZ (train)")
     build_gram_matrix(zz_kernel, X_train, save_path=f"{experiment_folder}/ZZFeatureMap_train.csv")
-    print("Calculating ZZ (train)")
+    print("Calculating ZZ (test)")
     build_gram_matrix(zz_kernel, X_train, X_test, save_path=f"{experiment_folder}/ZZFeatureMap_test.csv")
 
     # test QNN having Shirai ansatz and layers from 1 to 20
@@ -106,7 +106,7 @@ def run_experiment_file(specifications_dict):
     # print elapsed time
     elapsed_time = datetime.now() - start_time
 
-    # save codeversion inside the experiment folver
+    # save the elapsed time for all the experiments
     elapsed_time_path = f"{experiment_folder}/elapsed.time"
     with open(elapsed_time_path, "w+") as f:
         f.write(str(elapsed_time.total_seconds()))
