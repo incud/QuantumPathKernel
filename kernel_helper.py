@@ -144,7 +144,7 @@ def get_metrics_for_all_kernels(y_train, y_test, experiment_folder, layers):
 
     for kernel in KERNEL_LIST:
         gram_train = np.loadtxt(f"{experiment_folder}/{kernel}_train.csv", delimiter=",")
-        gram_test = np.loadtxt(f"{experiment_folder}/{kernel}_train.csv", delimiter=",")
+        gram_test = np.loadtxt(f"{experiment_folder}/{kernel}_test.csv", delimiter=",")
         _, accuracy, precision, recall, fscore = get_svm_metrics(gram_train, gram_test, y_train, y_test)
         df.loc[len(df)] = {
             "kernel": kernel,
@@ -153,5 +153,4 @@ def get_metrics_for_all_kernels(y_train, y_test, experiment_folder, layers):
             "recall": recall,
             "fscore": fscore
         }
-
-    df.to_pickle(f"{experiment_folder}/statistics.pickle")
+        df.to_pickle(f"{experiment_folder}/statistics.pickle")
