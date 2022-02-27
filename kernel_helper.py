@@ -24,8 +24,10 @@ def kernel_target_alignment(K, y):
     return kernel_alignment(K, yyt)
 
 
-def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, thread_parallel=True, thread_jobs=64):
-    """Build the Gram matrix associated with the given kernel"""
+def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, thread_parallel=True, thread_jobs=4):
+    """Build the Gram matrix associated with the given kernel
+    Warning: with thread_parallel True sometimes the penylane QNode return [] instead of a float number
+    """
     # check if only the input X is given or both Xtrain and Xtest
     if x_list_2 is None:
         x_list_2 = x_list_1
@@ -38,13 +40,26 @@ def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, 
     n, m = x_list_1.shape[0], x_list_2.shape[0]
 
     # i know, for Xtrain only the matrix is symmetric... but can we check it afterwards?
+    def gram_row_run(i):
+        # return [kernel_function(x_list_1[i], x_list_2[j]) for j in range(m)]
+        l = []
+        for j in range(m):
+            itemm = kernel_function(x_list_1[i], x_list_2[j])
+            item = None
+            try:
+                item = float(itemm)
+            except Exception as e:
+                print("Error ", e, "due to item", itemm, "in", i, x_list_1[i], j, x_list_2[j])
+                exit(-1)
+            l.append(item)
+        print(".", end="")
+        return l
+
     if thread_parallel:
-        gram_row_run = lambda i: [float(kernel_function(x_list_1[i], x_list_2[j])) for j in range(m)]
-        gram_matrix = Parallel(n_jobs=thread_jobs, prefer="threads")(
+        gram_matrix = Parallel(n_jobs=thread_jobs)(
             delayed(gram_row_run)(i) for i in range(n))
     else:
-        gram_matrix = [
-            [float(kernel_function(x_list_1[i], x_list_2[j])) for j in range(m)] for i in range(n)]
+        gram_matrix = [gram_row_run(i) for i in range(n)]
 
     # from list to numpy
     gram_matrix = np.array(gram_matrix)

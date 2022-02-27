@@ -58,7 +58,8 @@ def run_experiment_file(specifications_dict):
     X, y = shuffle(X, y, random_state=shuffle_seed)
 
     # get subset of the whole dataset
-    last_index = int(len(y) * float(specifications_dict["DATASET_PERCENT"]))
+    dataset_percent = float(specifications_dict["DATASET_PERCENT"])
+    last_index = int(len(y) * dataset_percent)
     X = X[:last_index]
     y = y[:last_index]
     assert set(y) == set([0, 1]), f"The set of labels must contain the exact two labels 0,1 (it has {set(y)})"

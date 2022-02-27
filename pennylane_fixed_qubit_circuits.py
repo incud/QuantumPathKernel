@@ -34,7 +34,7 @@ class PathKernelSimulator:
         # @qml.qnode(self.device_fixed_qubits, diff_method="parameter-shift", interface='jax')
         @qml.qnode(self.device_fixed_qubits)
         def shirai_circuit(x, theta, layers):
-            assert theta.shape == (layers, 3, 3), "Theta shape must be ({},3,3), now it is {}".format(layers, theta.shape)
+            assert theta.shape == (layers, N_QUBITS, 3), "Theta shape must be ({},{},3), now it is {}".format(layers, N_QUBITS, theta.shape)
             # quantum feature map (Havlicek)
             ZZFeatureMap(x, range(N_QUBITS), reps=1)
             # variational form
