@@ -62,7 +62,7 @@ def build_gram_matrix(kernel_function, x_list_1, x_list_2=None, save_path=None, 
         gram_matrix = [gram_row_run(i) for i in range(n)]
 
     # from list to numpy
-    gram_matrix = np.array(gram_matrix)
+    gram_matrix = np.array(gram_matrix).T
 
     # save to file if specified
     if save_path is not None:
