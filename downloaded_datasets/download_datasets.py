@@ -45,6 +45,8 @@ download_dataset(openml_df, "haberman")
 
 # Download wine-review (12 features [11 numeric + 1 categorical] + target)
 wine_df = download_dataset(openml_df, "wine")
+wine_df = wine_df[wine_df['target'] < 2]  # restrict to two classes only
+wine_df.to_pickle("wine.pickle")
 apply_pca(wine_df, n_components=4, name="wine-4PCA")
 apply_pca(wine_df, n_components=6, name="wine-6PCA")
 apply_pca(wine_df, n_components=8, name="wine-8PCA")
