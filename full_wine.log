@@ -1,0 +1,67 @@
+============= PATH KERNEL FOR QNN =============
+List of experiments configuration file: ['experiments_specifications/full_wine.json']
+Train set #=88 | Test set#=42
+Calculating Classical kernels (train+test)
+.....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................The number of qubit matches the number of features (13)
+Calculating ZZ (train)
+Calculating ZZ (test)
+...........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................1: The number of qubit matches the number of features (13)
+1: Started training
+1: Calculating NTK (train)
+2: The number of qubit matches the number of features (13)
+2: Started training
+2: Calculating NTK (train)
+3: The number of qubit matches the number of features (13)
+3: Started training
+3: Calculating NTK (train)
+4: The number of qubit matches the number of features (13)
+4: Started training
+4: Calculating NTK (train)
+5: The number of qubit matches the number of features (13)
+5: Started training
+5: Calculating NTK (train)
+6: The number of qubit matches the number of features (13)
+6: Started training
+6: Calculating NTK (train)
+8: The number of qubit matches the number of features (13)
+8: Started training
+8: Calculating NTK (train)
+7: The number of qubit matches the number of features (13)
+7: Started training
+7: Calculating NTK (train)
+9: The number of qubit matches the number of features (13)
+9: Started training
+9: Calculating NTK (train)
+10: The number of qubit matches the number of features (13)
+10: Started training
+10: Calculating NTK (train)
+11: The number of qubit matches the number of features (13)
+11: Started training
+11: Calculating NTK (train)
+13: The number of qubit matches the number of features (13)
+13: Started training
+13: Calculating NTK (train)
+12: The number of qubit matches the number of features (13)
+12: Started training
+12: Calculating NTK (train)
+14: The number of qubit matches the number of features (13)
+14: Started training
+14: Calculating NTK (train)
+15: The number of qubit matches the number of features (13)
+15: Started training
+15: Calculating NTK (train)
+16: The number of qubit matches the number of features (13)
+16: Started training
+16: Calculating NTK (train)
+17: The number of qubit matches the number of features (13)
+17: Started training
+17: Calculating NTK (train)
+18: The number of qubit matches the number of features (13)
+18: Started training
+18: Calculating NTK (train)
+19: The number of qubit matches the number of features (13)
+19: Started training
+19: Calculating NTK (train)
+20: The number of qubit matches the number of features (13)
+20: Started training
+20: Calculating NTK (train)

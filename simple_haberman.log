@@ -1,0 +1,8 @@
+============= PATH KERNEL FOR QNN =============
+List of experiments configuration file: ['experiments_specifications/simple_haberman.json']
+Train set #=2 | Test set#=2
+Calculating Classical kernels (train+test)
+The number of qubit matches the number of features (3)
+Calculating ZZ (train)
+Calculating ZZ (test)
+....................................................
