@@ -71,12 +71,12 @@ TRAINING_SET_SIZE = 6
 TESTING_SET_SIZE = 20
 MAX_DEPTH = 60
 LINEAR_W = 0.66
+MAX_EPOCHS = 1000
 
 training_losses = []
 testing_losses = []
 
-if __name__ == '__main__':
-
+def main():
     for l in range(MAX_DEPTH):
         l = l + 1
         plteacher = PennylaneLinearTeacher(l, LINEAR_W)
@@ -84,8 +84,7 @@ if __name__ == '__main__':
         X_test, Y_test = plteacher.generate_dataset(TESTING_SET_SIZE, noise=0)
         initial_params = pnp.random.uniform(low=-0.01, high=0.01, size=(l,))
         optimizer = AdamOptimizer()
-        epochs = 1000
-        specs, trace = plteacher.evaluate(initial_params, optimizer, epochs, X_train, Y_train, X_test, Y_test)
+        specs, trace = plteacher.evaluate(initial_params, optimizer, MAX_EPOCHS, X_train, Y_train, X_test, Y_test)
         json.dump(specs, open(f"linear-teacher-experiments/specs_{l}.json", "w"))
         trace.to_pickle(f"linear-teacher-experiments/trace_{l}.pickle")
         training_loss = trace.loc[len(trace)-1].training_loss
@@ -94,7 +93,44 @@ if __name__ == '__main__':
         training_losses.append(training_loss)
         testing_losses.append(testing_loss)
 
-    # plt.plot(range(MAX_DEPTH), training_losses, label="training loss")
-    # plt.plot(range(MAX_DEPTH), testing_losses, label="testing loss")
-    # plt.legend()
-    # plt.show()
+if __name__ == '__main__':
+    main()
+
+# def load_trace(i):
+#     return pd.read_pickle(f"linear-teacher-experiments/trace_{i}.pickle")
+#
+#
+# dfs = [load_trace(i+1) for i in range(MAX_DEPTH)]
+#
+#
+# def print_plot(tr_losses, te_losses, xlog):
+#     assert len(tr_losses) == len(te_losses)
+#     plt.plot(range(len(tr_losses)), tr_losses, label="training loss")
+#     plt.plot(range(len(tr_losses)), te_losses, label="testing loss")
+#     plt.legend()
+#     if xlog: plt.xscale('log')
+#     plt.show()
+#
+# def print_plot_depth(depth, xlog=False):
+#     print_plot(dfs[depth].training_loss, dfs[depth].testing_loss, xlog)
+#
+# def print_plot_epoch(i, xlog=False):
+#     tr_losses = []
+#     te_losses = []
+#     for df in dfs:
+#         tr_losses.append(df.loc[i].training_loss)
+#         te_losses.append(df.loc[i].testing_loss)
+#     print_plot(tr_losses, te_losses, xlog)
+#
+# def print_heatmap():
+#     train_loss_hm = pnp.zeros((len(dfs), len(dfs[0].training_loss)))
+#     test_loss_hm = pnp.zeros((len(dfs), len(dfs[0].training_loss)))
+#     for i, df in enumerate(dfs):
+#         train_loss_hm[i] = df.training_loss.to_numpy()
+#         test_loss_hm[i] = df.testing_loss.to_numpy()
+#     plt.imshow(train_loss_hm, cmap='hot', interpolation='nearest')
+#     plt.show()
+#     plt.imshow(test_loss_hm, cmap='hot', interpolation='nearest')
+#     plt.show()
+#
+#
