@@ -5,3 +5,4 @@ openml==0.12.2
 pandas==1.4.0
 PennyLane==0.20.0
 scikit_learn==1.0.2
+matplotlib
