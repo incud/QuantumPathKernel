@@ -1,3 +1,5 @@
+import numpy as np
+import pandas.core.frame
 import pennylane as qml
 from pennylane import numpy as pnp  # -> substituted by JAX
 from pennylane.optimize import AdamOptimizer, GradientDescentOptimizer
@@ -76,24 +78,70 @@ MAX_EPOCHS = 1000
 training_losses = []
 testing_losses = []
 
-def main():
-    for v in range(3, 20+1):
-        for l in range(MAX_DEPTH):
-            l = l + 1
-            plteacher = PennylaneLinearTeacher(l, LINEAR_W)
-            X_train, Y_train = plteacher.generate_dataset(TRAINING_SET_SIZE, noise=0.1)
-            X_test, Y_test = plteacher.generate_dataset(TESTING_SET_SIZE, noise=0)
-            initial_params = pnp.random.uniform(low=-0.01, high=0.01, size=(l,))
-            optimizer = AdamOptimizer()
-            specs, trace = plteacher.evaluate(initial_params, optimizer, MAX_EPOCHS, X_train, Y_train, X_test, Y_test)
-            json.dump(specs, open(f"linear-teacher-experiments-{v}/specs_{l}.json", "w"))
-            trace.to_pickle(f"linear-teacher-experiments-{v}/trace_{l}.pickle")
-            training_loss = trace.loc[len(trace)-1].training_loss
-            testing_loss = trace.loc[len(trace) - 1].testing_loss
-            print(f"Training loss is: {training_loss:3.3f}; Testing loss is: {testing_loss:3.3f}")
-            training_losses.append(training_loss)
-            testing_losses.append(testing_loss)
+def load_trace(i, v=1):
+    return pd.read_pickle(f"linear-teacher-experiments-{v}/trace_{i}.pickle")
+
+def print_plot(tr_losses, te_losses, xlog, vaxis=None):
+    assert len(tr_losses) == len(te_losses)
+    plt.plot(range(len(tr_losses)), tr_losses, label="training loss")
+    plt.plot(range(len(tr_losses)), te_losses, label="testing loss")
+    plt.legend()
+    if xlog: plt.xscale('log')
+    if vaxis is not None: plt.axvline(x=vaxis, color='r')
+    plt.show()
+
+def print_plot_depth(dfs, depth, xlog=False):
+    print_plot(dfs[depth].training_loss, dfs[depth].testing_loss, xlog)
+
+def get_training_loss(df, i):
+    if type(i) == list:
+        return sum(df.loc[ii].training_loss for ii in i) / len(i)
+    else:
+        return df.loc[i].training_loss
+
+def get_testing_loss(df, i):
+    if type(i) == list:
+        return sum(df.loc[ii].testing_loss for ii in i) / len(i)
+    else:
+        return df.loc[i].testing_loss
+
+def print_plot_epoch(dfs, i, xlog=False, vaxis=None):
+    tr_losses = []
+    te_losses = []
+    for df in dfs:
+        tr_losses.append(get_training_loss(df, i))
+        te_losses.append(get_testing_loss(df, i))
+    print_plot(tr_losses, te_losses, xlog, vaxis)
+
+def create_heatmap(dfs):
+    train_loss_hm = pnp.zeros((len(dfs), len(dfs[0].training_loss)))
+    test_loss_hm = pnp.zeros((len(dfs), len(dfs[0].training_loss)))
+    for i, df in enumerate(dfs):
+        train_loss_hm[i] = df.training_loss.to_numpy()
+        test_loss_hm[i] = df.testing_loss.to_numpy()
+    return train_loss_hm, test_loss_hm
 
 
-if __name__ == '__main__':
-    main()
+def print_heatmap_log(dfs):
+
+    if type(dfs[0]) == pandas.core.frame.DataFrame:
+        training_loss_hm, testing_loss_hm = create_heatmap(dfs)
+    else:
+        N = len(dfs)
+        training_loss_hm, testing_loss_hm = create_heatmap(dfs[0])
+        for i in range(1, N):
+            a, b = create_heatmap(dfs[i])
+            training_loss_hm += a
+            testing_loss_hm += b
+        training_loss_hm /= N
+        testing_loss_hm /= N
+
+    im = plt.pcolor(testing_loss_hm.T)
+    plt.colorbar(im, orientation='horizontal')
+    plt.yscale('log')
+    plt.ylim((1, 1000))
+    plt.axvline(x=4, color='r')
+    plt.show()
+
+dfs1 = [load_trace(i + 1, v=1) for i in range(MAX_DEPTH)]
+dfs2 = [load_trace(i + 1, v=2) for i in range(MAX_DEPTH)]
