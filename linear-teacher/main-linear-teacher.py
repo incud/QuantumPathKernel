@@ -5,7 +5,7 @@ import pandas as pd
 from functools import partial
 import matplotlib.pyplot as plt
 import json
-
+from datetime import datetime
 
 class PennylaneLinearTeacher:
 
@@ -90,10 +90,11 @@ def main():
             trace.to_pickle(f"linear-teacher-experiments-{v}/trace_{l}.pickle")
             training_loss = trace.loc[len(trace)-1].training_loss
             testing_loss = trace.loc[len(trace) - 1].testing_loss
-            print(f"Training loss is: {training_loss:3.3f}; Testing loss is: {testing_loss:3.3f}")
+            print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} {v}: Training loss is: {training_loss:3.3f}; Testing loss is: {testing_loss:3.3f}")
             training_losses.append(training_loss)
             testing_losses.append(testing_loss)
 
 
 if __name__ == '__main__':
     main()
+    pass
