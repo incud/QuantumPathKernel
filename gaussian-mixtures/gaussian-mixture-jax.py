@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import datetime
+from datetime import datetime
 import jax
 import jax.numpy as jnp
 import optax
@@ -57,11 +57,11 @@ def create_qnn(N, layers):
     device = qml.device("default.qubit.jax", wires=N)
 
     @jax.jit
-    @qml.qnode(device, interface="jax")
+    @qml.qnode(device, interface='jax')
     def qnn(x, theta):
         # data encoding
         for i in range(N):
-            qml.RY(x, wires=i)
+            qml.RY(x[i], wires=i)
         # variational form (no BP due to LaRocca et al '21)
         for l in range(layers):
             for j in range(N):
@@ -75,19 +75,24 @@ def create_qnn(N, layers):
 
 
 def train_qnn(X, Y, qnn, n_params, epochs):
-
-    seed = datetime.datetime.now()
+    N, _ = X.shape
+    seed = int(datetime.now().strftime('%Y%m%d%H%M%S'))
     rng = jax.random.PRNGKey(seed)
     optimizer = optax.adam(learning_rate=0.1)
-    initial_params = jax.random.normal(rng, shape=(n_params,))
-    params = initial_params
+    params = jax.random.normal(rng, shape=(n_params,))
+    opt_state = optimizer.init(params)
+
+    def calculate_cost_item(x, y, qnn, params):
+        value = qnn(x, params)  #.block_until_ready()
+        return (value - y) ** 2
 
     def calculate_cost(X, Y, qnn, params):
-        item_cost = lambda x, y: (qnn(x, params).block_until_ready() - y) ** 2
-        costs = jax.vmap(item_cost)(np.c_[X, Y])
-        return jnp.sum(costs)
+        the_cost = 0.0
+        for i in range(N):
+            the_cost += calculate_cost_item(X[i], Y[i], qnn, params)
+        return the_cost
 
-    specs = {'initial_params': str(initial_params),
+    specs = {'initial_params': str(params),
              'optimizer': 'optax.adam(learning_rate=0.1)',
              'epochs': epochs,
              'n_params': n_params,
@@ -99,8 +104,8 @@ def train_qnn(X, Y, qnn, n_params, epochs):
     df = pd.DataFrame(columns=['epoch', 'loss', 'params'])
     df.loc[len(df)] = {
         'epoch': 0,
-        'loss': calculate_cost(X, Y, qnn, initial_params),
-        'params': initial_params
+        'loss': calculate_cost(X, Y, qnn, params),
+        'params': params
     }
 
     for epoch in range(1, epochs+1):
@@ -118,7 +123,6 @@ def train_qnn(X, Y, qnn, n_params, epochs):
 
 def calculate_ntk(X, qnn, df):
 
-    N, D = X.shape
     qnn_grad = jax.grad(qnn, argnums=(1,))
 
     def ntk(x1, x2, params):
@@ -142,7 +146,7 @@ def calculate_ntk(X, qnn, df):
 
 
 def calculate_pk(ntk_grams):
-    return np.average(ntk_grams, axis=2)
+    return np.average(ntk_grams, axis=0)
 
 
 def calculate_tk_alignment(K1, K2, centered=False):
@@ -175,17 +179,19 @@ def run_qnn(X, Y, layers, epochs):
 def run_qnns(D, snr, N, MAX_LAYERS, MAX_EPOCHS):
 
     X, Y = create_gaussian_mixtures(D, snr, N)
-    directory = f"experiment_snr{snr:0.2f}_d{D}_{datetime.now().strftime('%Y%m%d%_H:%M')}"
+    directory = f"experiment_snr{snr:0.2f}_d{D}_{datetime.now().strftime('%Y%m%d%H%M')}"
     Path(directory).mkdir(parents=True, exist_ok=True)
 
-    for layers in range(MAX_LAYERS):
-        specs, df, ntk_grams, ntk_gram_indexes, pk_gram = run_qnn(X, Y, layers=layers)
+    for layers in range(1, MAX_LAYERS+1):
+        specs, df, ntk_grams, ntk_gram_indexes, pk_gram = run_qnn(X, Y, layers=layers, epochs=MAX_EPOCHS)
         specs["D"] = D
         specs["snr"] = snr
         specs["N"] = N
-        json.save(specs, open(f"{directory}/specs.json", "w"))
+        json.dump(specs, open(f"{directory}/specs.json", "w"))
         df.to_pickle(f"{directory}/trace_{layers}.pickle")
-        np.save(f"{directory}/grams.npy", "w", [ntk_grams, ntk_gram_indexes, pk_gram])
+        np.save(f"{directory}/ntk_grams.npy", ntk_grams)
+        np.save(f"{directory}/ntk_gram_indexes.npy", ntk_gram_indexes)
+        np.save(f"{directory}/pk_gram.npy", pk_gram)
 
 
 # ========================================================================================
@@ -194,15 +200,16 @@ def run_qnns(D, snr, N, MAX_LAYERS, MAX_EPOCHS):
 
 @click.group()
 def main():
+    print("Welcome")
     pass
 
 @main.command()
-@click.option('--D', default=2, type=int)
+@click.option('--d', default=2, type=int)
 @click.option('--snr', default=0.1, type=float)
-@click.option('--N', default=16, type=int)
+@click.option('--n', default=16, type=int)
 @click.option('--layers', default=20, type=int)
 @click.option('--epochs', default=1000, type=int)
-def experiment(D, snr, N, layers, epochs):
+def experiment(d, snr, n, layers, epochs):
     """
     Start the experiments
     :param D: dimensionality of the data (at least 2
@@ -212,8 +219,8 @@ def experiment(D, snr, N, layers, epochs):
     :param epochs: maximum number of training epochs (default 1000)
     :return: nothing, everything is saved to file
     """
-    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={D}, snr={snr}, N={N}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
-    run_qnns(D, snr, N, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
+    run_qnns(d, snr, n, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
 
 
 @main.command()
@@ -225,3 +232,7 @@ def analyze(directory):
     :return: nothing, everything is saved to file
     """
     raise ValueError("Not implemented yet")
+
+
+if __name__ == '__main__':
+    main()
