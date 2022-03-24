@@ -2,7 +2,6 @@ import pennylane as qml
 import jax
 import jax.numpy as jnp
 import numpy as np
-from pennylane.optimize import AdamOptimizer, GradientDescentOptimizer
 import pandas as pd
 from functools import partial
 import json
