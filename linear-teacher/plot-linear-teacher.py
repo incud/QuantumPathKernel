@@ -328,27 +328,21 @@ def plotntkprediction(repetition, epoch, layers):
     regr.fit(K_train.T, Y_train)
     Y_actual = regr.predict(K_test.T)
 
+    X_train, K_train, Y_train, X_test, K_test, Y_test = load_ntk_data(repetition, layers, -1)
+    regr_pk = SVR(kernel='precomputed')
+    regr_pk.fit(K_train.T, Y_train)
+    Y_actual_pk = regr_pk.predict(K_test.T)
+
     plt.title(f"SVR loss using NTK at epoch {epoch} - lower is better")
-    print(X_train.tolist())
-    print(Y_train.tolist())
-    print(X_test.tolist())
-    print(Y_test.tolist())
     plt.plot([0,1], [0,0.66], color='red')
-    plt.scatter(X_train.tolist(), Y_train.tolist(), label="Training")
-    plt.scatter(X_test.tolist(), Y_test.tolist(), label="Testing (ideal)")
-    plt.scatter(X_test.tolist(), Y_actual.tolist(), label="Testing (actual)")
+    plt.scatter(X_train.tolist(), Y_train.tolist(), label="Training", color='black')
+    # plt.scatter(X_test.tolist(), Y_test.tolist(), label="Testing (ideal)")
+    plt.scatter(X_train.tolist(), regr.predict(K_train.T), label=f"Training (NTK epoch {epoch})", color='#0000FF')
+    plt.scatter(X_train.tolist(), regr_pk.predict(K_train.T), label=f"Training (PK)", color='#0077FF')
+    plt.scatter(X_test.tolist(), Y_actual.tolist(), label=f"Testing (NTK epoch {epoch})", color='#FF2266')
+    plt.scatter(X_test.tolist(), Y_actual_pk.tolist(), label="Testing (PK)", color="#77FF00")
     plt.legend()
     plt.show()
-
-
-@main.command()
-def fixspecs():
-    """
-    Plot the norm change
-
-    REPETITION is which repetition you want the plot of (-1 for the average)
-    """
-    pass
 
 
 if __name__ == '__main__':
