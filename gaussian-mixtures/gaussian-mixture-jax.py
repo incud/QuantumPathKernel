@@ -117,7 +117,10 @@ def train_qnn(X, Y, qnn, n_params, epochs):
             'loss': cost,
             'params': params
         }
+        if epoch % 50 == 0:
+            print(".", end="", flush=True)
 
+    print("")
     return specs, df
 
 
@@ -187,11 +190,11 @@ def run_qnns(D, snr, N, MAX_LAYERS, MAX_EPOCHS):
         specs["D"] = D
         specs["snr"] = snr
         specs["N"] = N
-        json.dump(specs, open(f"{directory}/specs.json", "w"))
+        json.dump(specs, open(f"{directory}/specs_{layers}.json", "w"))
         df.to_pickle(f"{directory}/trace_{layers}.pickle")
-        np.save(f"{directory}/ntk_grams.npy", ntk_grams)
-        np.save(f"{directory}/ntk_gram_indexes.npy", ntk_gram_indexes)
-        np.save(f"{directory}/pk_gram.npy", pk_gram)
+        np.save(f"{directory}/ntk_grams_{layers}.npy", ntk_grams)
+        np.save(f"{directory}/ntk_gram_indexes_{layers}.npy", ntk_gram_indexes)
+        np.save(f"{directory}/pk_gram_{layers}.npy", pk_gram)
 
 
 # ========================================================================================
