@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from datetime import datetime
 import jax
 import jax.numpy as jnp
@@ -10,6 +11,7 @@ import pandas as pd
 import json
 from pathlib import Path
 import click
+from sklearn.svm import SVC
 
 
 def create_gaussian_mixtures(D, snr, N):
@@ -32,7 +34,7 @@ def create_gaussian_mixtures(D, snr, N):
     centroids = np.array([(.5, .5), (.5, -.5), (-.5, -.5), (-.5, .5)])
     for i in range(N):
         quadrant = i % 4
-        Y[i] = 1 if quadrant % 2 == 0 else -1
+        Y[i] = 1 if quadrant % 2 == 0 else -1  # labels are 0 or 1
         X[i][0], X[i][1] = centroids[quadrant] + np.random.uniform(-snr, snr, size=(2,))
     return X, Y
 
@@ -66,21 +68,23 @@ def train_qnn(X, Y, qnn, loss, n_params, epochs):
     params = jax.random.normal(rng, shape=(n_params,))
     opt_state = optimizer.init(params)
 
-    def calculate_mse_cost_item(x, y, qnn, params):
-        value = qnn(x, params)
-        return (value - y) ** 2
-
-    def calculate_bce_cost_item(x, y, qnn, params):
-        value = qnn(x, params)
-        return (value - y) ** 2
-
-    calculate_cost_item = calculate_mse_cost_item if loss == "mse" else calculate_bce_cost_item
-
-    def calculate_cost(X, Y, qnn, params):
+    def calculate_mse_cost(X, Y, qnn, params):
         the_cost = 0.0
         for i in range(N):
-            the_cost += calculate_cost_item(X[i], Y[i], qnn, params)
+            x, y = X[i], Y[i]
+            yp = qnn(x, params)
+            the_cost += (y - yp)**2
         return the_cost
+
+    def calculate_bce_cost(X, Y, qnn, params):
+        the_cost = 0.0
+        for i in range(N):
+            x, y = X[i], Y[i]
+            yp = qnn(x, params)
+            the_cost += y * jnp.log2(yp) + (1 - y) * jnp.log2(1 - yp)
+        return the_cost * (-1/N)
+
+    calculate_cost = calculate_mse_cost if loss == "mse" else calculate_bce_cost
 
     specs = {'initial_params': str(params),
              'optimizer': 'optax.adam(learning_rate=0.1)',
@@ -129,7 +133,7 @@ def calculate_ntk(X, qnn, df):
     ntk_gram_params = []
     for i, row in df.iterrows():
         params = row["params"]
-        if len(ntk_gram_params) == 0 or np.linalg.norm(ntk_gram_params[-1] - params) >= MIN_NORM_CHANGE:
+        if len(ntk_gram_params) == 0 or i == len(df)-1 or np.linalg.norm(ntk_gram_params[-1] - params) >= MIN_NORM_CHANGE:
             ntk_gram = kernel_matrix(X, X, kernel=lambda x1, x2: ntk(x1, x2, params))
             ntk_grams.append(ntk_gram)
             ntk_gram_indexes.append(i)
@@ -168,6 +172,8 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS):
         specs["snr"] = snr
         specs["N"] = N
         specs["loss"] = loss
+        specs["MAX_LAYERS"] = MAX_LAYERS
+        specs["MAX_EPOCHS"] = MAX_EPOCHS
         json.dump(specs, open(f"{directory}/specs_{layers}.json", "w"))
         df.to_pickle(f"{directory}/trace_{layers}.pickle")
         np.save(f"{directory}/ntk_grams_{layers}.npy", ntk_grams)
@@ -195,11 +201,18 @@ def calculate_tk_alignment(K1, K2, centered=False):
     return np.sum(K1 * K2) / np.linalg.norm(K1) / np.linalg.norm(K2)
 
 
+def calculate_svc_accuracy(K, Y):
+    regr = SVC(kernel='precomputed')
+    regr.fit(K.T, Y)
+    Y_actual = regr.predict(K.T)
+    accuracy = np.sum(Y_actual == Y) / len(Y)
+    return accuracy
+
+
 def plot_dataset(X, Y):
     X1 = X[Y == 1]
     X2 = X[Y == -1]
     centroids = np.array([(.5, .5), (.5, -.5), (-.5, -.5), (-.5, .5)])
-    plt.title(f"Gaussian Mixtures dataset plot")
     plt.scatter(X1[:, 0].tolist(), X1[:, 1].tolist(), label="First class", color='green')
     plt.scatter(X2[:, 0].tolist(), X2[:, 1].tolist(), label="Second class", color='blue')
     plt.scatter(centroids[:, 0].tolist(), centroids[:, 1].tolist(), label="Centroids", color='black', marker='x')
@@ -208,7 +221,216 @@ def plot_dataset(X, Y):
     plt.xlabel("x1")
     plt.ylabel("x2")
     plt.legend()
-    plt.show()
+
+
+def s2np(s):
+    """String [v1 v2 ... vn] to NUMPY"""
+    vs = s.replace("[", "").replace("]", "").split("\n")
+    vf = [[float(f) for f in list(filter(lambda x: len(x) > 0, vrow.split(" ")))] for vrow in vs]
+    npa = np.array(vf)
+    if npa.shape[0] == 1:
+        npa = npa.reshape(-1)
+    return npa
+
+
+def plot_model_training_loss_per_epoch(traces):
+    """
+    Plot the training loss of the many models
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    MAX_DEPTH = len(traces)
+    MAX_EPOCHS = len(traces[0])
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_DEPTH))
+    plt.figure()
+    for i, trace in enumerate(traces):
+        plt.plot(range(MAX_EPOCHS), trace["loss"], color=color_palette[i], label=f"Depth {i+1}")
+    plt.xlabel("Epochs of training")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.tight_layout()
+
+
+def plot_model_params_norm_per_epoch(traces):
+    """
+    Plot the norm of params of the many models
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    MAX_DEPTH = len(traces)
+    MAX_EPOCHS = len(traces[0])
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_DEPTH))
+    plt.figure()
+    for i, trace in enumerate(traces):
+        init_params = trace["params"].loc[0]
+        init_norm = np.linalg.norm(init_params)
+        def normalise(x):
+            return np.linalg.norm(x - init_params) / init_norm
+        params_norm = np.vectorize(normalise)(trace["params"].to_numpy())
+        plt.plot(range(MAX_EPOCHS), params_norm, color=color_palette[i], label=f"Depth {i+1}")
+    plt.xlabel("Epochs of training")
+    plt.ylabel(r"Norm change $\frac{||\theta(n)-\theta(0)||}{||\theta(0)||}$")
+    plt.legend()
+    plt.tight_layout()
+
+
+def plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
+    """
+    Plot the target kernel alignment per epoch
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    M = len(Y)
+    N = len(ntk_grams_list)
+    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
+
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
+    plt.figure()
+    for i, (ntk_grams, ntk_indexes) in enumerate(zip(ntk_grams_list, ntk_gram_indexes_list)):
+        x = ntk_indexes
+        y = [calculate_tk_alignment(YYt, ntk_gram) for ntk_gram in ntk_grams]
+        plt.plot(x, y, color=color_palette[i], label=f"NTK (depth {i + 1})")
+
+    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
+    for i in range(N):
+        y = calculate_tk_alignment(YYt, pk_grams[i])
+        plt.scatter([-100], [y], label=f"PK (depth {i+1})", color=color_palette[i])
+
+    plt.xlabel("Epochs of training")
+    plt.ylabel(r"Target-Kernel alignment")
+    plt.legend()
+
+
+def plot_accuracy_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
+    """
+    Plot the target kernel alignment per epoch
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    M = len(Y)
+    N = len(ntk_grams_list)
+    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
+
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
+    plt.figure()
+    for i, (ntk_grams, ntk_indexes) in enumerate(zip(ntk_grams_list, ntk_gram_indexes_list)):
+        x = ntk_indexes
+        y = [calculate_svc_accuracy(ntk_gram, Y) for ntk_gram in ntk_grams]
+        plt.plot(x, y, color=color_palette[i], label=f"NTK (depth {i + 1})")
+
+    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
+    for i in range(N):
+        y = calculate_svc_accuracy(pk_grams[i], Y)
+        plt.scatter([-100], [y], label=f"PK (depth {i+1})", color=color_palette[i])
+
+    plt.xlabel("Epochs of training")
+    plt.ylabel(r"Accuracy")
+    plt.legend()
+
+
+def plot_model_training_loss_per_depth(traces):
+    """
+    Plot the training loss of the many models
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    MAX_DEPTH = len(traces)
+    MAX_EPOCHS = len(traces[0])
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_EPOCHS // 100 + 1))
+    plt.figure()
+    for i in range(0, MAX_EPOCHS+1, 100):
+        losses = [traces[j]["loss"].loc[i] for j in range(MAX_DEPTH)]
+        plt.scatter(range(1, MAX_DEPTH+1), losses, color=color_palette[i // 100], label=f"Epoch {i}")
+    plt.xticks(range(1, MAX_DEPTH+1))
+    plt.xlabel("Depth")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.tight_layout()
+
+
+def plot_model_parameter_norm_per_depth(traces):
+    """
+    Plot the training loss of the many models
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    MAX_DEPTH = len(traces)
+    MAX_EPOCHS = len(traces[0])
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_EPOCHS // 100 + 1))
+    get_param = lambda j, i: traces[j]["params"].loc[i]
+
+    plt.figure()
+    for i in range(0, MAX_EPOCHS+1, 100):
+        params = [np.linalg.norm(get_param(j, i) - get_param(j, 0))/np.linalg.norm(get_param(j, 0)) for j in range(MAX_DEPTH)]
+        plt.scatter(range(1, MAX_DEPTH+1), params, color=color_palette[i // 100], label=f"Epoch {i}")
+    plt.xticks(range(1, MAX_DEPTH+1))
+    plt.xlabel("Depth")
+    plt.ylabel(r"Norm change $\frac{||\theta(n)-\theta(0)||}{||\theta(0)||}$")
+    plt.legend()
+    plt.tight_layout()
+
+
+def plot_tk_alignment_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
+    """
+    Plot the target kernel alignment per epoch
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    M = len(Y)
+    N = len(ntk_grams_list)
+    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
+    plt.figure()
+
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
+    for i in range(N):
+        y = calculate_tk_alignment(YYt, ntk_grams_list[i][-1])
+        plt.scatter([i+1], [y], label=f"NTK (depth {i+1})", color=color_palette[i])
+
+    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
+    for i in range(N):
+        y = calculate_tk_alignment(YYt, pk_grams[i])
+        plt.scatter([i+1], [y], label=f"PK (depth {i+1})", color=color_palette[i])
+
+    plt.xlabel("Depth")
+    plt.ylabel(r"Target-Kernel alignment")
+    plt.legend()
+
+
+def plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
+    """
+    Plot the target kernel alignment per epoch
+    X = epochs; Y = loss
+    :param traces:
+    :return:
+    """
+    M = len(Y)
+    N = len(ntk_grams_list)
+    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
+    plt.figure(figsize=(5, 5))
+
+    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
+    for i in range(N):
+        y = calculate_svc_accuracy(ntk_grams_list[i][-1], Y)
+        if y < 0:
+            print(f"NTK gram matrix {i} has y={y}<0")
+        plt.scatter([i+1], [y], label=f"NTK (depth {i+1})", color=color_palette[i])
+
+    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
+    for i in range(N):
+        y = calculate_svc_accuracy(pk_grams[i], Y)
+        plt.scatter([i+1], [y], label=f"PK (depth {i+1})", color=color_palette[i])
+
+    plt.xlabel("Depth")
+    plt.ylabel(r"Accuracy")
+    plt.legend(bbox_to_anchor=(1, 1), prop={'size': 6})
+    plt.tight_layout()
 
 # ========================================================================================
 # ====================================== CLI =============================================
@@ -251,26 +473,70 @@ def analyze(directory):
     :param directory: where the experiment data is saved
     :return: nothing, everything is saved to file
     """
-    # create analysis directory
+    # create analysis directory and load specifications
     subdirectory = directory + "/analysis"
     Path(subdirectory).mkdir(parents=True, exist_ok=True)
-    # plot dataset
-    # TODO
-    # loss of the models at the various depths (last epochs)
-    # TODO
-    # loss of each model during the training (one single plot)
-    # TODO
-    # (end - start) norm change of the models at the various depths (all lines in one plot, x=epoch, y=norm change)
-    # TODO
-    # norm change of each parameter, of each model
-    # TODO - multi histogram with one line per parameter per model
-    # target-kernel alignment of each NTK during the training + PK
-    # TODO - x=epochs, y=tk alignment
-    # target-kernel alignment of the last epoch NTK vs PK (varying the depth)
-    # TODO - x=layers, y=tk alignment
-    #
+    specs = json.load(open(f"{directory}/specs_1.json"))
+    X, Y, D, snr, N, loss = s2np(specs["X"]), s2np(specs["Y"]), int(specs["D"]), float(specs["snr"]), int(specs["N"]), specs["loss"]
 
-    raise ValueError("Not implemented yet")
+    # load trace data
+    layers_files = list(
+        filter(lambda x: x.startswith("trace"), [x.name for x in Path(directory).iterdir() if x.is_file()]))
+    MAX_LAYERS = len(layers_files)
+    TRACES = [pd.read_pickle(f"{directory}/trace_{l}.pickle") for l in range(1, MAX_LAYERS + 1)]
+    MAX_DEPTH = len(TRACES[0])
+
+    # load gram matrices
+    ntk_grams_list = [np.load(f"{directory}/ntk_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+    ntk_gram_indexes_list = [np.load(f"{directory}/ntk_gram_indexes_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+    pk_gram_list = [np.load(f"{directory}/pk_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+
+    # plot dataset
+    plot_dataset(X, Y)
+    plt.title("Gaussian Mixtures dataset")
+    dataset_info = f"Dimensionality D={D}, signal noise ratio snr={snr}, size N={N}"
+    plt.figtext(0.5, 0, dataset_info, wrap=True, horizontalalignment='center', verticalalignment='bottom', fontsize=12)
+    plt.savefig(f"{subdirectory}/dataset_plot.png", dpi=300, format='png')
+
+    # loss of the models at the various depths (last epochs)
+    plot_model_training_loss_per_epoch(TRACES)
+    plt.title(f"Loss (training set) of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/loss_in_training_per_epoch.png", dpi=300, format='png')
+
+    # loss of each model during the training (one single plot)
+    plot_model_training_loss_per_depth(TRACES)
+    plt.title(f"Loss (training set) of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/loss_in_training_per_depth.png", dpi=300, format='png')
+
+    # (end - start) norm change of the models at the various depths (all lines in one plot, x=epoch, y=norm change)
+    plot_model_params_norm_per_epoch(TRACES)
+    plt.title(f"Norm change during training of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_epoch.png", dpi=300, format='png')
+
+    # norm change of each parameter, of each model
+    plot_model_parameter_norm_per_depth(TRACES)
+    plt.title(f"Norm change during training of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_depth.png", dpi=300, format='png')
+
+    # # target-kernel alignment of each NTK during the training + PK
+    # plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
+    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_epoch.png", dpi=300, format='png')
+
+    # # target-kernel alignment of the last epoch NTK vs PK (varying the depth)
+    # plot_tk_alignment_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
+    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_depth.png", dpi=300, format='png')
+
+    # SVM model accuracy of each NTK during the training + PK
+    plot_accuracy_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
+    plt.savefig(f"{subdirectory}/accuracy_in_training_per_epoch.png", dpi=300, format='png')
+
+    # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
+    plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
+    plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
 
 
 if __name__ == '__main__':
