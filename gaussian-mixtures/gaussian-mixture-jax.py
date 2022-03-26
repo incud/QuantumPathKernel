@@ -78,9 +78,11 @@ def train_qnn(X, Y, qnn, loss, n_params, epochs):
 
     def calculate_bce_cost(X, Y, qnn, params):
         the_cost = 0.0
+        epsilon = 1e-6
         for i in range(N):
             x, y = X[i], Y[i]
-            yp = qnn(x, params)
+            y = (y + 1)/2 + epsilon  # 1 label -> 1; - label -> 0
+            yp = (qnn(x, params) + 1)/2 + epsilon  # 1 label -> 1; - label -> 0
             the_cost += y * jnp.log2(yp) + (1 - y) * jnp.log2(1 - yp)
         return the_cost * (-1/N)
 
@@ -242,14 +244,17 @@ def plot_model_training_loss_per_epoch(traces):
     """
     MAX_DEPTH = len(traces)
     MAX_EPOCHS = len(traces[0])
+    X = list(range(MAX_EPOCHS))
     color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_DEPTH))
     plt.figure()
     for i, trace in enumerate(traces):
-        plt.plot(range(MAX_EPOCHS), trace["loss"], color=color_palette[i], label=f"Depth {i+1}")
+        Y = trace["loss"].to_numpy().astype('float')
+        Y[np.isnan(Y)] = 0
+        plt.plot(X, Y, color=color_palette[i], label=f"Depth {i+1}")
+    plt.xlim((0, MAX_EPOCHS))
     plt.xlabel("Epochs of training")
     plt.ylabel("Loss")
     plt.legend()
-    plt.tight_layout()
 
 
 def plot_model_params_norm_per_epoch(traces):
@@ -342,10 +347,13 @@ def plot_model_training_loss_per_depth(traces):
     MAX_DEPTH = len(traces)
     MAX_EPOCHS = len(traces[0])
     color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_EPOCHS // 100 + 1))
+    LOSSES_LIST = [traces[j]["loss"].to_numpy().astype('float') for j in range(MAX_DEPTH)]
     plt.figure()
     for i in range(0, MAX_EPOCHS+1, 100):
-        losses = [traces[j]["loss"].loc[i] for j in range(MAX_DEPTH)]
-        plt.scatter(range(1, MAX_DEPTH+1), losses, color=color_palette[i // 100], label=f"Epoch {i}")
+        X = np.array(list(range(1, MAX_DEPTH+1)))
+        Y = np.array([LOSSES_LIST[j][i] for j in range(MAX_DEPTH)])
+        Y[np.isnan(Y)] = 0.0
+        plt.scatter(X, Y, color=color_palette[i // 100], label=f"Epoch {i}")
     plt.xticks(range(1, MAX_DEPTH+1))
     plt.xlabel("Depth")
     plt.ylabel("Loss")
