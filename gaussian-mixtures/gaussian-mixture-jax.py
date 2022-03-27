@@ -165,7 +165,7 @@ def run_qnn(X, Y, loss, layers, epochs):
 def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS):
 
     X, Y = create_gaussian_mixtures(D, snr, N)
-    directory = f"experiment_snr{snr:0.2f}_d{D}_{datetime.now().strftime('%Y%m%d%H%M')}"
+    directory = f"experiment_snr{snr:0.2f}_d{D}_l{loss}_{datetime.now().strftime('%Y%m%d%H%M')}"
     Path(directory).mkdir(parents=True, exist_ok=True)
 
     for layers in range(1, MAX_LAYERS+1):
