@@ -1,0 +1,84 @@
+incudubuntu@DAT25773:/mnt/c/Users/m.incudini/PycharmProjects/QuantumPathKernel/gaussian-mixtures$ python3.9 gaussian-mixture-jax.py  experiment --d 4 --snr 1.00 --n 16 --loss mse
+Welcome
+27/03/2022 19:37:37 - Experiment D=4, snr=1.0, N=16, MAX_LAYERS=20, MAX_EPOCHS=1000
+27/03/2022 19:37:37 - Creating QNN
+WARNING:absl:No GPU/TPU found, falling back to CPU. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
+27/03/2022 19:37:38 - Start training
+....................
+27/03/2022 19:39:29 - Start NTK PK calculation
+27/03/2022 19:40:02 - Creating QNN
+27/03/2022 19:40:02 - Start training
+....................
+27/03/2022 19:43:04 - Start NTK PK calculation
+27/03/2022 19:44:20 - Creating QNN
+27/03/2022 19:44:20 - Start training
+....................
+27/03/2022 19:48:40 - Start NTK PK calculation
+27/03/2022 19:53:14 - Creating QNN
+27/03/2022 19:53:14 - Start training
+....................
+27/03/2022 19:59:05 - Start NTK PK calculation
+27/03/2022 20:08:49 - Creating QNN
+27/03/2022 20:08:49 - Start training
+....................
+27/03/2022 20:15:49 - Start NTK PK calculation
+27/03/2022 20:26:30 - Creating QNN
+27/03/2022 20:26:30 - Start training
+....................
+27/03/2022 20:34:54 - Start NTK PK calculation
+27/03/2022 20:47:47 - Creating QNN
+27/03/2022 20:47:47 - Start training
+....................
+27/03/2022 20:57:23 - Start NTK PK calculation
+27/03/2022 21:05:34 - Creating QNN
+27/03/2022 21:05:34 - Start training
+....................
+27/03/2022 21:16:39 - Start NTK PK calculation
+27/03/2022 21:29:59 - Creating QNN
+27/03/2022 21:29:59 - Start training
+....................
+27/03/2022 21:42:39 - Start NTK PK calculation
+27/03/2022 21:59:20 - Creating QNN
+27/03/2022 21:59:20 - Start training
+....................
+27/03/2022 22:13:44 - Start NTK PK calculation
+27/03/2022 22:28:40 - Creating QNN
+27/03/2022 22:28:40 - Start training
+....................
+27/03/2022 22:44:21 - Start NTK PK calculation
+27/03/2022 23:01:06 - Creating QNN
+27/03/2022 23:01:06 - Start training
+....................
+27/03/2022 23:18:11 - Start NTK PK calculation
+27/03/2022 23:38:07 - Creating QNN
+27/03/2022 23:38:07 - Start training
+....................
+27/03/2022 23:58:32 - Start NTK PK calculation
+28/03/2022 00:15:03 - Creating QNN
+28/03/2022 00:15:03 - Start training
+....................
+28/03/2022 00:34:15 - Start NTK PK calculation
+28/03/2022 00:54:46 - Creating QNN
+28/03/2022 00:54:46 - Start training
+....................
+28/03/2022 01:15:35 - Start NTK PK calculation
+28/03/2022 01:34:47 - Creating QNN
+28/03/2022 01:34:47 - Start training
+....................
+28/03/2022 01:57:00 - Start NTK PK calculation
+28/03/2022 02:19:31 - Creating QNN
+28/03/2022 02:19:31 - Start training
+....................
+28/03/2022 02:43:14 - Start NTK PK calculation
+28/03/2022 03:08:23 - Creating QNN
+28/03/2022 03:08:23 - Start training
+....................
+28/03/2022 03:34:08 - Start NTK PK calculation
+28/03/2022 04:06:15 - Creating QNN
+28/03/2022 04:06:15 - Start training
+....................
+28/03/2022 04:33:03 - Start NTK PK calculation
+28/03/2022 05:02:12 - Creating QNN
+28/03/2022 05:02:12 - Start training
+....................
+28/03/2022 05:30:18 - Start NTK PK calculation
