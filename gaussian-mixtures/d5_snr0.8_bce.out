@@ -1,0 +1,29 @@
+Welcome
+28/03/2022 09:56:27 - Experiment D=5, snr=0.8, N=16, MAX_LAYERS=20, MAX_EPOCHS=1000
+28/03/2022 09:56:27 - Creating QNN
+28/03/2022 09:56:27 - Start training
+....................
+28/03/2022 10:00:59 - Start NTK PK calculation
+28/03/2022 10:02:08 - Creating QNN
+28/03/2022 10:02:08 - Start training
+....................
+28/03/2022 10:07:21 - Start NTK PK calculation
+28/03/2022 10:11:07 - Creating QNN
+28/03/2022 10:11:07 - Start training
+....................
+28/03/2022 10:17:59 - Start NTK PK calculation
+28/03/2022 10:23:05 - Creating QNN
+28/03/2022 10:23:05 - Start training
+....................
+28/03/2022 10:31:27 - Start NTK PK calculation
+28/03/2022 10:44:18 - Creating QNN
+28/03/2022 10:44:18 - Start training
+....................
+28/03/2022 10:54:11 - Start NTK PK calculation
+28/03/2022 11:12:38 - Creating QNN
+28/03/2022 11:12:38 - Start training
+....................
+28/03/2022 11:24:10 - Start NTK PK calculation
+28/03/2022 11:41:22 - Creating QNN
+28/03/2022 11:41:22 - Start training
+....................
