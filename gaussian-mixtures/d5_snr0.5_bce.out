@@ -1,3 +1,49 @@
-2022-03-28 18:08:00.776256: W external/org_tensorflow/tensorflow/compiler/xla/service/platform_util.cc:205] unable to create StreamExecutor for CUDA:0: failed initializing StreamExecutor for CUDA device ordinal 0: INTERNAL: failed call to cuDevicePrimaryCtxRetain: CUDA_ERROR_OUT_OF_MEMORY: out of memory; total memory reported: 34089926656
-2022-03-28 18:08:00.906167: W external/org_tensorflow/tensorflow/compiler/xla/service/gpu/gpu_transfer_manager.cc:68] GpuTransferManager couldn't get StreamExecutor for device 0.  As a result, all dynamic shape copies from that device will be unpinned (and therefore potentially slow).
-2022-03-28 18:08:00.909941: F external/org_tensorflow/tensorflow/core/platform/statusor.cc:33] Attempting to fetch value instead of handling error INVALID_ARGUMENT: device CUDA:0 not supported by XLA service
+Welcome
+29/03/2022 07:59:05 - Experiment D=5, snr=0.5, N=16, MAX_LAYERS=20, MAX_EPOCHS=1000
+29/03/2022 07:59:05 - Creating QNN
+29/03/2022 07:59:06 - Start training
+....................
+29/03/2022 08:03:43 - Start NTK PK calculation
+29/03/2022 08:04:28 - Creating QNN
+29/03/2022 08:04:28 - Start training
+....................
+29/03/2022 08:09:49 - Start NTK PK calculation
+29/03/2022 08:13:53 - Creating QNN
+29/03/2022 08:13:53 - Start training
+....................
+29/03/2022 08:20:59 - Start NTK PK calculation
+29/03/2022 08:29:43 - Creating QNN
+29/03/2022 08:29:43 - Start training
+....................
+29/03/2022 08:38:27 - Start NTK PK calculation
+29/03/2022 08:52:45 - Creating QNN
+29/03/2022 08:52:45 - Start training
+....................
+29/03/2022 09:03:18 - Start NTK PK calculation
+29/03/2022 09:14:50 - Creating QNN
+29/03/2022 09:14:50 - Start training
+....................
+29/03/2022 09:27:06 - Start NTK PK calculation
+29/03/2022 09:54:14 - Creating QNN
+29/03/2022 09:54:14 - Start training
+....................
+29/03/2022 10:08:31 - Start NTK PK calculation
+29/03/2022 10:35:12 - Creating QNN
+29/03/2022 10:35:12 - Start training
+....................
+29/03/2022 10:50:35 - Start NTK PK calculation
+29/03/2022 11:21:33 - Creating QNN
+29/03/2022 11:21:33 - Start training
+....................
+29/03/2022 11:38:32 - Start NTK PK calculation
+29/03/2022 12:13:32 - Creating QNN
+29/03/2022 12:13:32 - Start training
+....................
+29/03/2022 12:32:21 - Start NTK PK calculation
+29/03/2022 13:01:25 - Creating QNN
+29/03/2022 13:01:25 - Start training
+....................
+29/03/2022 13:22:03 - Start NTK PK calculation
+29/03/2022 13:57:19 - Creating QNN
+29/03/2022 13:57:19 - Start training
+................
