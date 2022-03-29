@@ -151,7 +151,7 @@ def calculate_pk(ntk_grams):
 def run_qnn(X, Y, loss, layers, epochs):
 
     N, D = X.shape
-    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Creating QNN")
+    print(f"\n{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Creating QNN ({layers} layers)")
     qnn = create_qnn(D, layers)
     print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Start training")
     specs, df = train_qnn(X, Y, qnn, loss, n_params=2*layers, epochs=epochs)
@@ -159,6 +159,7 @@ def run_qnn(X, Y, loss, layers, epochs):
     print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Start NTK PK calculation")
     ntk_grams, ntk_gram_indexes = calculate_ntk(X, qnn, df)
     pk_gram = calculate_pk(ntk_grams)
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - End QNN")
     return specs, df, ntk_grams, ntk_gram_indexes, pk_gram
 
 
@@ -469,7 +470,7 @@ def experiment(d, snr, n, loss, layers, epochs):
     :param epochs: maximum number of training epochs (default 1000)
     :return: nothing, everything is saved to file
     """
-    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
     run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
 
 
