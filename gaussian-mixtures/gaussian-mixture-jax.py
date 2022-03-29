@@ -594,10 +594,10 @@ def report():
         <p>The loss function we can study is either the Binary Cross Entropy, which is used for classification 
         problems such this one, and the Mean Square Error, which is used in regression problems usually but it still
         make sense to make the comparison.</p>
-        <h4>Loss per epoch</h2>
+        <h4>Loss per epoch</h4>
         <p>The following paragram study the loss of each model with respect to the epoch of training (x axis). The
         color of the line represents how many layer the QNN has.</p>
-        <h6>Using loss BCE (Binary Cross Entropy)</h4>
+        <h6>Using loss BCE (Binary Cross Entropy)</h6>
         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'bce'))}
@@ -664,7 +664,7 @@ def report():
         opposite, since the PK at small depth allows to interpret the model as a kernel machine while the NTK at small
         depth (and thus larger parameters norm change) means nothing. We need to check it here something. Well, to tell
         the truth, it seems to me that the performances of PK are almost the average of the performance of NTK...</br>
-        P.S: this graph are not great. Do we know a fancier graphical representation?
+        P.S: this graph are not great. Do we know a fancier graphical representation?</p>
         <h6>Using loss BCE (Binary Cross Entropy)</h6>
         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}" 
