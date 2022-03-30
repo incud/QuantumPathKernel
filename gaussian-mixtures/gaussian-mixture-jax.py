@@ -560,6 +560,8 @@ def report():
     experiments_specs = [(regex.match(experiment), experiment) for experiment in experiments_list]
     experiments_specs = [{'snr': r.group(1), 'd': r.group(2), 'loss': r.group(3), 'dir': dir} for (r, dir) in experiments_specs]
     filtered_specs = lambda key, value: [spec for spec in experiments_specs if spec[key] == value]
+    def multi_filtered_specs(assignments):
+        return [spec for spec in experiments_specs if all(spec[k] == v for k, v in assignments)]
     title = "Gaussian Mixtures with Quantum Machine Learning models and Path Kernel"
     gen_time = datetime.now()
     rprt = f"""
@@ -690,8 +692,10 @@ def report():
         <p>Does it happens that, like in Refinetti's work, by increasing D the kernel machine loses performances? 
         If that happens, it might mean that the kernel are working just like random features. We still miss some further
         experiments to see a pattern, however:</p>
-        <p>Take loss=MSE, snr=0.20, D=5..6</p>
-        <p>TODO</p>
+        <p>Take loss=BCE, snr=0.50, D in[2, 3, 4, 5]</p>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in multi_filtered_specs([('loss', 'bce'), ('snr', '0.50')]))}
         <br/><br/><br/><p>End of report</p><br/><br/><br/>
     </body>
 </html>
