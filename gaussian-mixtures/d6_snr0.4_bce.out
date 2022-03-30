@@ -100,3 +100,9 @@ Welcome
 30/03/2022 08:31:37 - Creating QNN (17 layers)
 30/03/2022 08:31:37 - Start training
 ....................
+30/03/2022 09:10:05 - Start NTK PK calculation
+30/03/2022 10:15:04 - End QNN
+
+30/03/2022 10:15:04 - Creating QNN (18 layers)
+30/03/2022 10:15:04 - Start training
+....................
