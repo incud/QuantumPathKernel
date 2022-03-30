@@ -442,42 +442,8 @@ def plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
     plt.legend(bbox_to_anchor=(1, 1), prop={'size': 6})
     plt.tight_layout()
 
-# ========================================================================================
-# ====================================== CLI =============================================
-# ========================================================================================
 
-
-@click.group()
-def main():
-    print("Welcome")
-    pass
-
-
-@main.command()
-@click.option('--d', default=2, type=int)
-@click.option('--snr', default=0.1, type=float)
-@click.option('--n', default=16, type=int)
-@click.option('--loss', type=click.Choice(['mse', 'bce']), required=True)
-@click.option('--layers', default=20, type=int)
-@click.option('--epochs', default=1000, type=int)
-def experiment(d, snr, n, loss, layers, epochs):
-    """
-    Start the experiments
-    :param d: dimensionality of the data (at least 2
-    :param snr: signal to noise ratio
-    :param n: number of training samples (must be multiple of 4, suggested and default 16)
-    :param loss: MSE (mean square error) or BCE (binary cross entropy)
-    :param layers: maximum number of layers (default 20)
-    :param epochs: maximum number of training epochs (default 1000)
-    :return: nothing, everything is saved to file
-    """
-    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
-    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
-
-
-@main.command()
-@click.option('--directory', type=click.Path(exists=True))
-def analyze(directory):
+def run_analysis(directory):
     """
     Analyze the data contained in the given directory
     :param directory: where the experiment data is saved
@@ -548,6 +514,49 @@ def analyze(directory):
     plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
 
+# ========================================================================================
+# ====================================== CLI =============================================
+# ========================================================================================
+
+
+@click.group()
+def main():
+    print("Welcome")
+    pass
+
+
+@main.command()
+@click.option('--d', default=2, type=int)
+@click.option('--snr', default=0.1, type=float)
+@click.option('--n', default=16, type=int)
+@click.option('--loss', type=click.Choice(['mse', 'bce']), required=True)
+@click.option('--layers', default=20, type=int)
+@click.option('--epochs', default=1000, type=int)
+def experiment(d, snr, n, loss, layers, epochs):
+    """
+    Start the experiments
+    :param d: dimensionality of the data (at least 2
+    :param snr: signal to noise ratio
+    :param n: number of training samples (must be multiple of 4, suggested and default 16)
+    :param loss: MSE (mean square error) or BCE (binary cross entropy)
+    :param layers: maximum number of layers (default 20)
+    :param epochs: maximum number of training epochs (default 1000)
+    :return: nothing, everything is saved to file
+    """
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
+    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
+
+
+@main.command()
+@click.option('--directory', type=click.Path(exists=True))
+def analyze(directory):
+    """
+    Analyze the data contained in the given directory
+    :param directory: where the experiment data is saved
+    :return: nothing, everything is saved to file
+    """
+    run_analysis(directory)
+
 
 @main.command()
 def report():
@@ -555,14 +564,27 @@ def report():
     Generate report in html format
     :return: nothing, the html il saved to report_<datetime>.html
     """
-    regex = re.compile(r"experiment_snr([0-9.]*)_d([0-9]*)_l([a-z]*)_[0-9]*")
+
+    # getting the directory of all experiments
     experiments_list = [x.name for x in Path(".").iterdir() if x.is_dir() and x.name.startswith("experiment_")]
+
+    # refreshing the plots (might still have old plots, better safe than sorry right?)
+    for directory in experiments_list:
+        print(f"Updating plots of experiment {directory}")
+        run_analysis(directory)
+
+    # extract specs from directory name (i know, a json file was better... btw its possible to load specs_1.json)
+    regex = re.compile(r"experiment_snr([0-9.]*)_d([0-9]*)_l([a-z]*)_[0-9]*")
     experiments_specs = [(regex.match(experiment), experiment) for experiment in experiments_list]
     experiments_specs = [{'snr': r.group(1), 'd': r.group(2), 'loss': r.group(3), 'dir': dir} for (r, dir) in experiments_specs]
+
+    # utilities for report generation
     filtered_specs = lambda key, value: [spec for spec in experiments_specs if spec[key] == value]
     multi_filtered_specs = lambda assignments: [spec for spec in experiments_specs if all(spec[k] == v for k, v in assignments)]
     title = "Gaussian Mixtures with Quantum Machine Learning models and Path Kernel"
     gen_time = datetime.now()
+
+    # report
     rprt = f"""
 <html>
     <head>
