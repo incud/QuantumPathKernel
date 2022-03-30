@@ -581,10 +581,10 @@ def report():
         In Refinetti's work, having large value to D results in a difficult environment for random feature kernel models
         while Neural Networks, due to their dissipative work, can easily learn the distribution reaching the optimal
         performance of the oracle. </p>
-        {"".join(f"<p>Dataset generated with snr={spec['snr']}:</br>"
+        {"".join(f"<p>Dataset generated with snr={spec['snr']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/dataset_plot.png'/></p>{chr(10)}" 
                  for spec in experiments_specs)}
-        </br>
+        <br/>
         <h2>Loss</h2>
         <p>The loss is the function minimized during the training phase by the optimizer. In classical deep learning 
         theory, I should reach zero loss when I have just enough parameters to perfectly fit the data, resulting in 
@@ -598,28 +598,28 @@ def report():
         <p>The following paragram study the loss of each model with respect to the epoch of training (x axis). The
         color of the line represents how many layer the QNN has.</p>
         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'bce'))}
         <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'mse'))}
-        </br>
+        <br/>
         <h4>Loss per depth</h4>
         <p>The following paragram study the loss of each model with respect to the depth (x axis). The point on each 
         vertical line represents the evolution of the loss at a certain depth, during the training each epoch multiple
         of 100. The fact that the points are not evenly spread from the top to the bottom means that the loss 
         immediately reach zero (well, in 100 epoch at least).</p>
         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'bce'))}
         <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'mse'))}
-        </br>
+        <br/>
         <h2>Parameters norm change</h2>
         <p>Parameters norm change highlight the lazy training phenomena: if the parameters stay close to their 
         initialization then we are in a lazy training regime (a sort of, since our QNN are indeed linear model, 
@@ -629,27 +629,27 @@ def report():
         quickly into a solution (n.b. note that here just the norm is checked, eventually if they are rotating they
         will indeed change if I can't see that from this plot... It's more a technical note though). 
         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'bce'))}
         <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'mse'))}
-        </br>
+        <br/>
         <h4>Parameters norm change per depth</h4>
         <p>If the yellow-er dots stay close to the red (initial) ones then we are in lazy training. It almost never
         happen than the norm first increase (going far from the initialization) then decreases (returning back to the
         initialization).
         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'bce'))}
         <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'mse'))}
-        </br>
+        <br/>
         <h2>Accuracy</h2>
         <p>We compare the accuracy of the model in predicting the labels by comparing the NTK calculated (for each QNN)
         at its last configuration, at the end of the training (1000 epoch) and the Path Kernel. 
@@ -663,36 +663,36 @@ def report():
         small depths the NTK performs better, and with higher depths the NTK performs worse. I was expecting the
         opposite, since the PK at small depth allows to interpret the model as a kernel machine while the NTK at small
         depth (and thus larger parameters norm change) means nothing. We need to check it here something. Well, to tell
-        the truth, it seems to me that the performances of PK are almost the average of the performance of NTK...</br>
+        the truth, it seems to me that the performances of PK are almost the average of the performance of NTK...<br/>
         P.S: this graph are not great. Do we know a fancier graphical representation?</p>
         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'bce'))}
         <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'mse'))}
-        </br>
+        <br/>
         <h4>Accuracy per depth</h4>
         <p>Much clearer representation... From these graphs, PK seems to win in general, especially with BCE loss! 
         Still, we are using the same points of the training.</p>
         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'bce'))}
         <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
                  for spec in filtered_specs('loss', 'mse'))}
-        </br>
+        <br/>
         <h2>By increasing D...</h2>
         <p>Does it happens that, like in Refinetti's work, by increasing D the kernel machine loses performances? 
         If that happens, it might mean that the kernel are working just like random features. We still miss some further
         experiments to see a pattern, however:</p>
         <p>Take loss=MSE, snr=0.20, D=5..6</p>
         <p>TODO</p>
-        </br></br></br><p>End of report</p></br></br></br>
+        <br/><br/><br/><p>End of report</p><br/><br/><br/>
     </body>
 </html>
     """
