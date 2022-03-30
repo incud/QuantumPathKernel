@@ -106,3 +106,126 @@ Welcome
 30/03/2022 10:15:04 - Creating QNN (18 layers)
 30/03/2022 10:15:04 - Start training
 ....................
+30/03/2022 10:55:47 - Start NTK PK calculation
+30/03/2022 12:14:18 - End QNN
+
+30/03/2022 12:14:18 - Creating QNN (19 layers)
+30/03/2022 12:14:18 - Start training
+....................2022-03-30 14:19:15.868900: E external/org_tensorflow/tensorflow/compiler/xla/pjrt/pjrt_stream_executor_client.cc:2140] Execution of replica 0 failed: INTERNAL: Failed to load in-memory CUBIN: CUDA_ERROR_OUT_OF_MEMORY: out of memory
+
+30/03/2022 13:00:07 - Start NTK PK calculation
+30/03/2022 14:18:47 - End QNN
+
+30/03/2022 14:18:47 - Creating QNN (20 layers)
+30/03/2022 14:18:47 - Start training
+Traceback (most recent call last):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 552, in <module>
+    @main.command()
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1128, in __call__
+    return self.main(*args, **kwargs)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1053, in main
+    rv = self.invoke(ctx)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1659, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1395, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 754, in invoke
+    return __callback(*args, **kwargs)
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 474, in experiment
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 173, in run_qnns
+    for layers in range(1, MAX_LAYERS+1):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 157, in run_qnn
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Start training")
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 108, in train_qnn
+    for epoch in range(1, epochs+1):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 108, in <lambda>
+    for epoch in range(1, epochs+1):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 85, in calculate_bce_cost
+    y = (y + 1)/2 + epsilon  # 1 label -> 1; - label -> 0
+jax._src.source_info_util.JaxStackTraceBeforeTransformation: RuntimeError: INTERNAL: Failed to load in-memory CUBIN: CUDA_ERROR_OUT_OF_MEMORY: out of memory
+
+The preceding stack trace is the source of the JAX operation that, once transformed by JAX, triggered the following exception.
+
+--------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 552, in <module>
+    @main.command()
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1128, in __call__
+    return self.main(*args, **kwargs)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1053, in main
+    rv = self.invoke(ctx)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1659, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1395, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 754, in invoke
+    return __callback(*args, **kwargs)
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 474, in experiment
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 173, in run_qnns
+    for layers in range(1, MAX_LAYERS+1):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 157, in run_qnn
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Start training")
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 108, in train_qnn
+    for epoch in range(1, epochs+1):
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/_src/api.py", line 958, in value_and_grad_f
+    g = vjp_py(lax_internal._one(ans))
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/_src/tree_util.py", line 279, in __call__
+    return self.fun(*args, **kw)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/_src/api.py", line 2315, in _vjp_pullback_wrapper
+    ans = fun(*args)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/_src/tree_util.py", line 279, in __call__
+    return self.fun(*args, **kw)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/interpreters/ad.py", line 126, in unbound_vjp
+    arg_cts = backward_pass(jaxpr, reduce_axes, True, consts, dummy_args, cts)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/interpreters/ad.py", line 230, in backward_pass
+    cts_out = get_primitive_transpose(eqn.primitive)(
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/interpreters/ad.py", line 599, in call_transpose
+    out_flat = primitive.bind(fun, *all_args, **new_params)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/core.py", line 1709, in bind
+    return call_bind(self, fun, *args, **params)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/core.py", line 1721, in call_bind
+    outs = top_trace.process_call(primitive, fun, tracers, params)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/core.py", line 614, in process_call
+    return primitive.impl(f, *tracers, **params)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/_src/dispatch.py", line 145, in _xla_call_impl
+    out = compiled_fun(*args)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/jax/_src/dispatch.py", line 444, in _execute_compiled
+    out_bufs = compiled.execute(input_bufs)
+jax._src.traceback_util.UnfilteredStackTrace: RuntimeError: INTERNAL: Failed to load in-memory CUBIN: CUDA_ERROR_OUT_OF_MEMORY: out of memory
+
+The stack trace below excludes JAX-internal frames.
+The preceding is the original exception that occurred, unmodified.
+
+--------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 552, in <module>
+    @main.command()
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1128, in __call__
+    return self.main(*args, **kwargs)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1053, in main
+    rv = self.invoke(ctx)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1659, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 1395, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/data/mgrossi/anaconda_install/envs/pennylane/lib/python3.9/site-packages/click/core.py", line 754, in invoke
+    return __callback(*args, **kwargs)
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 474, in experiment
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 173, in run_qnns
+    for layers in range(1, MAX_LAYERS+1):
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 157, in run_qnn
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Start training")
+  File "/data/mgrossi/QuantumPathKernel/gaussian-mixtures/gaussian-mixture-jax.py", line 108, in train_qnn
+    for epoch in range(1, epochs+1):
+RuntimeError: INTERNAL: Failed to load in-memory CUBIN: CUDA_ERROR_OUT_OF_MEMORY: out of memory
