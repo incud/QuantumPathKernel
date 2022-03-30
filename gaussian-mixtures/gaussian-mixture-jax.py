@@ -560,8 +560,7 @@ def report():
     experiments_specs = [(regex.match(experiment), experiment) for experiment in experiments_list]
     experiments_specs = [{'snr': r.group(1), 'd': r.group(2), 'loss': r.group(3), 'dir': dir} for (r, dir) in experiments_specs]
     filtered_specs = lambda key, value: [spec for spec in experiments_specs if spec[key] == value]
-    def multi_filtered_specs(assignments):
-        return [spec for spec in experiments_specs if all(spec[k] == v for k, v in assignments)]
+    multi_filtered_specs = lambda assignments: [spec for spec in experiments_specs if all(spec[k] == v for k, v in assignments)]
     title = "Gaussian Mixtures with Quantum Machine Learning models and Path Kernel"
     gen_time = datetime.now()
     rprt = f"""
