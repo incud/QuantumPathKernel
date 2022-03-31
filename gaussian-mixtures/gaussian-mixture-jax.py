@@ -473,95 +473,79 @@ def run_analysis(directory):
     dataset_info = f"Dimensionality D={D}, signal noise ratio snr={snr}, size N={N}"
     plt.figtext(0.5, 0, dataset_info, wrap=True, horizontalalignment='center', verticalalignment='bottom', fontsize=12)
     plt.savefig(f"{subdirectory}/dataset_plot.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
 
     # loss of the models at the various depths (last epochs)
     plot_model_training_loss_per_epoch(TRACES)
     plt.title(f"Loss (training set) of variational models (loss={loss})")
     plt.savefig(f"{subdirectory}/loss_in_training_per_epoch.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
 
     # loss of each model during the training (one single plot)
     plot_model_training_loss_per_depth(TRACES)
     plt.title(f"Loss (training set) of variational models (loss={loss})")
     plt.savefig(f"{subdirectory}/loss_in_training_per_depth.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
 
     # (end - start) norm change of the models at the various depths (all lines in one plot, x=epoch, y=norm change)
     plot_model_params_norm_per_epoch(TRACES)
     plt.title(f"Norm change during training of variational models (loss={loss})")
     plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_epoch.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
 
     # norm change of each parameter, of each model
     plot_model_parameter_norm_per_depth(TRACES)
     plt.title(f"Norm change during training of variational models (loss={loss})")
     plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_depth.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
 
     # # target-kernel alignment of each NTK during the training + PK
     # plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
     # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
     # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_epoch.png", dpi=300, format='png')
+    # plt.close()
+    # plt.cla()
+    # plt.clf()
 
     # # target-kernel alignment of the last epoch NTK vs PK (varying the depth)
     # plot_tk_alignment_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
     # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
     # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_depth.png", dpi=300, format='png')
+    # plt.close()
+    # plt.cla()
+    # plt.clf()
 
     # SVM model accuracy of each NTK during the training + PK
     plot_accuracy_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
     plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_training_per_epoch.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
 
     # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
     plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
     plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
-
-# ========================================================================================
-# ====================================== CLI =============================================
-# ========================================================================================
-
-
-@click.group()
-def main():
-    print("Welcome")
-    pass
+    plt.close()
+    plt.cla()
+    plt.clf()
 
 
-@main.command()
-@click.option('--d', default=2, type=int)
-@click.option('--snr', default=0.1, type=float)
-@click.option('--n', default=16, type=int)
-@click.option('--loss', type=click.Choice(['mse', 'bce']), required=True)
-@click.option('--layers', default=20, type=int)
-@click.option('--epochs', default=1000, type=int)
-def experiment(d, snr, n, loss, layers, epochs):
-    """
-    Start the experiments
-    :param d: dimensionality of the data (at least 2
-    :param snr: signal to noise ratio
-    :param n: number of training samples (must be multiple of 4, suggested and default 16)
-    :param loss: MSE (mean square error) or BCE (binary cross entropy)
-    :param layers: maximum number of layers (default 20)
-    :param epochs: maximum number of training epochs (default 1000)
-    :return: nothing, everything is saved to file
-    """
-    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
-    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
-
-
-@main.command()
-@click.option('--directory', type=click.Path(exists=True))
-def analyze(directory):
-    """
-    Analyze the data contained in the given directory
-    :param directory: where the experiment data is saved
-    :return: nothing, everything is saved to file
-    """
-    run_analysis(directory)
-
-
-@main.command()
-def report():
+def run_report(refreshplots):
     """
     Generate report in html format
+    :param refreshplots: if true, the plots are generated again
     :return: nothing, the html il saved to report_<datetime>.html
     """
 
@@ -569,9 +553,10 @@ def report():
     experiments_list = [x.name for x in Path(".").iterdir() if x.is_dir() and x.name.startswith("experiment_")]
 
     # refreshing the plots (might still have old plots, better safe than sorry right?)
-    for directory in experiments_list:
-        print(f"Updating plots of experiment {directory}")
-        run_analysis(directory)
+    if refreshplots == 'true':
+        for directory in experiments_list:
+            print(f"Updating plots of experiment {directory}")
+            run_analysis(directory)
 
     # extract specs from directory name (i know, a json file was better... btw its possible to load specs_1.json)
     regex = re.compile(r"experiment_snr([0-9.]*)_d([0-9]*)_l([a-z]*)_[0-9]*")
@@ -608,6 +593,11 @@ def report():
                  f"<img src='{spec['dir']}/analysis/dataset_plot.png'/></p>{chr(10)}" 
                  for spec in experiments_specs)}
         <br/>
+        <h2>QNN</h2>
+        <p>The Quantum Neural Network's variational for is, for each layer: a ZZ rotation each couple of adjacent qubits (in a 
+        circular fashion) parameterized with a single, shared parameter, and a X rotation each qubit parameterized with a single,
+        shared parameter. For L layers, there are 2L parameters. <br/> This form has the advantange that it's 
+        experimentally proven by LaRocca-Cerezo's work that does not show barren plateau. </p>
         <h2>Loss</h2>
         <p>The loss is the function minimized during the training phase by the optimizer. In classical deep learning 
         theory, I should reach zero loss when I have just enough parameters to perfectly fit the data, resulting in 
@@ -722,6 +712,61 @@ def report():
 </html>
     """
     print(rprt, file=open(f"report_{gen_time.strftime('%Y%m%d%H%M')}.html", "w"))
+
+
+# ========================================================================================
+# ====================================== CLI =============================================
+# ========================================================================================
+
+
+@click.group()
+def main():
+    print("Welcome")
+    pass
+
+
+@main.command()
+@click.option('--d', default=2, type=int)
+@click.option('--snr', default=0.1, type=float)
+@click.option('--n', default=16, type=int)
+@click.option('--loss', type=click.Choice(['mse', 'bce']), required=True)
+@click.option('--layers', default=20, type=int)
+@click.option('--epochs', default=1000, type=int)
+def experiment(d, snr, n, loss, layers, epochs):
+    """
+    Start the experiments
+    :param d: dimensionality of the data (at least 2
+    :param snr: signal to noise ratio
+    :param n: number of training samples (must be multiple of 4, suggested and default 16)
+    :param loss: MSE (mean square error) or BCE (binary cross entropy)
+    :param layers: maximum number of layers (default 20)
+    :param epochs: maximum number of training epochs (default 1000)
+    :return: nothing, everything is saved to file
+    """
+    print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
+    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
+
+
+@main.command()
+@click.option('--directory', type=click.Path(exists=True))
+def analyze(directory):
+    """
+    Analyze the data contained in the given directory
+    :param directory: where the experiment data is saved
+    :return: nothing, everything is saved to file
+    """
+    run_analysis(directory)
+
+
+@main.command()
+@click.option('--refreshplots', type=click.Choice(['true', 'false']), required=True)
+def report(refreshplots):
+    """
+    Generate report in html format
+    :param refreshplots: if true, the plots are generated again; otherwise use false
+    :return: nothing, the html il saved to report_<datetime>.html
+    """
+    run_report(refreshplots)
 
 
 if __name__ == '__main__':
