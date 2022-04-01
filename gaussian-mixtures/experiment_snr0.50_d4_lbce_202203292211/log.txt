@@ -1,0 +1,124 @@
+incudubuntu@DAT25773:/mnt/c/Users/m.incudini/PycharmProjects/QuantumPathKernel/gaussian-mixtures$ python3.9 gaussian-mixture-jax.py  experiment --d 4 --snr 0.5 --n 16 --loss bce
+Welcome
+29/03/2022 22:11:52 - Experiment D=4, snr=0.5, N=16, loss=bce, MAX_LAYERS=20, MAX_EPOCHS=1000
+
+29/03/2022 22:11:52 - Creating QNN (1 layers)
+WARNING:absl:No GPU/TPU found, falling back to CPU. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
+29/03/2022 22:11:52 - Start training
+....................
+29/03/2022 22:15:38 - Start NTK PK calculation
+29/03/2022 22:16:09 - End QNN
+
+29/03/2022 22:16:09 - Creating QNN (2 layers)
+29/03/2022 22:16:09 - Start training
+....................
+29/03/2022 22:20:49 - Start NTK PK calculation
+29/03/2022 22:22:45 - End QNN
+
+29/03/2022 22:22:45 - Creating QNN (3 layers)
+29/03/2022 22:22:45 - Start training
+....................
+29/03/2022 22:28:56 - Start NTK PK calculation
+29/03/2022 22:33:26 - End QNN
+
+29/03/2022 22:33:26 - Creating QNN (4 layers)
+29/03/2022 22:33:26 - Start training
+....................
+29/03/2022 22:41:12 - Start NTK PK calculation
+29/03/2022 22:49:45 - End QNN
+
+29/03/2022 22:49:45 - Creating QNN (5 layers)
+29/03/2022 22:49:45 - Start training
+....................
+29/03/2022 23:00:24 - Start NTK PK calculation
+29/03/2022 23:22:57 - End QNN
+
+29/03/2022 23:22:57 - Creating QNN (6 layers)
+29/03/2022 23:22:57 - Start training
+....................
+29/03/2022 23:34:09 - Start NTK PK calculation
+29/03/2022 23:48:44 - End QNN
+
+29/03/2022 23:48:44 - Creating QNN (7 layers)
+29/03/2022 23:48:44 - Start training
+....................
+30/03/2022 00:01:19 - Start NTK PK calculation
+30/03/2022 00:11:24 - End QNN
+
+30/03/2022 00:11:24 - Creating QNN (8 layers)
+30/03/2022 00:11:24 - Start training
+....................
+30/03/2022 00:25:57 - Start NTK PK calculation
+30/03/2022 00:41:48 - End QNN
+
+30/03/2022 00:41:48 - Creating QNN (9 layers)
+30/03/2022 00:41:48 - Start training
+....................
+30/03/2022 00:58:10 - Start NTK PK calculation
+30/03/2022 01:19:53 - End QNN
+
+30/03/2022 01:19:53 - Creating QNN (10 layers)
+30/03/2022 01:19:53 - Start training
+....................
+30/03/2022 01:37:59 - Start NTK PK calculation
+30/03/2022 02:01:00 - End QNN
+
+30/03/2022 02:01:00 - Creating QNN (11 layers)
+30/03/2022 02:01:00 - Start training
+....................
+30/03/2022 02:20:52 - Start NTK PK calculation
+30/03/2022 02:41:00 - End QNN
+
+30/03/2022 02:41:00 - Creating QNN (12 layers)
+30/03/2022 02:41:00 - Start training
+....................
+30/03/2022 03:02:13 - Start NTK PK calculation
+30/03/2022 03:22:24 - End QNN
+
+30/03/2022 03:22:24 - Creating QNN (13 layers)
+30/03/2022 03:22:24 - Start training
+....................
+30/03/2022 03:43:10 - Start NTK PK calculation
+30/03/2022 04:01:59 - End QNN
+
+30/03/2022 04:01:59 - Creating QNN (14 layers)
+30/03/2022 04:01:59 - Start training
+....................
+30/03/2022 04:22:51 - Start NTK PK calculation
+30/03/2022 04:46:31 - End QNN
+
+30/03/2022 04:46:32 - Creating QNN (15 layers)
+30/03/2022 04:46:32 - Start training
+....................
+30/03/2022 05:09:01 - Start NTK PK calculation
+30/03/2022 05:31:59 - End QNN
+
+30/03/2022 05:31:59 - Creating QNN (16 layers)
+30/03/2022 05:31:59 - Start training
+....................
+30/03/2022 05:55:36 - Start NTK PK calculation
+30/03/2022 06:15:58 - End QNN
+
+30/03/2022 06:15:58 - Creating QNN (17 layers)
+30/03/2022 06:15:58 - Start training
+....................
+30/03/2022 06:39:58 - Start NTK PK calculation
+30/03/2022 06:59:52 - End QNN
+
+30/03/2022 06:59:52 - Creating QNN (18 layers)
+30/03/2022 06:59:52 - Start training
+....................
+30/03/2022 07:23:45 - Start NTK PK calculation
+30/03/2022 07:44:59 - End QNN
+
+30/03/2022 07:44:59 - Creating QNN (19 layers)
+30/03/2022 07:44:59 - Start training
+....................
+30/03/2022 08:11:21 - Start NTK PK calculation
+30/03/2022 08:35:17 - End QNN
+
+30/03/2022 08:35:18 - Creating QNN (20 layers)
+30/03/2022 08:35:18 - Start training
+....................
+30/03/2022 09:02:20 - Start NTK PK calculation
+30/03/2022 09:36:35 - End QNN

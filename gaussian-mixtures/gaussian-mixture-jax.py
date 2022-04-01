@@ -442,6 +442,278 @@ def plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
     plt.legend(bbox_to_anchor=(1, 1), prop={'size': 6})
     plt.tight_layout()
 
+
+def run_analysis(directory):
+    """
+    Analyze the data contained in the given directory
+    :param directory: where the experiment data is saved
+    :return: nothing, everything is saved to file
+    """
+    # create analysis directory and load specifications
+    subdirectory = directory + "/analysis"
+    Path(subdirectory).mkdir(parents=True, exist_ok=True)
+    specs = json.load(open(f"{directory}/specs_1.json"))
+    X, Y, D, snr, N, loss = s2np(specs["X"]), s2np(specs["Y"]), int(specs["D"]), float(specs["snr"]), int(specs["N"]), specs["loss"]
+
+    # load trace data
+    layers_files = list(
+        filter(lambda x: x.startswith("trace"), [x.name for x in Path(directory).iterdir() if x.is_file()]))
+    MAX_LAYERS = len(layers_files)
+    TRACES = [pd.read_pickle(f"{directory}/trace_{l}.pickle") for l in range(1, MAX_LAYERS + 1)]
+    MAX_DEPTH = len(TRACES[0])
+
+    # load gram matrices
+    ntk_grams_list = [np.load(f"{directory}/ntk_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+    ntk_gram_indexes_list = [np.load(f"{directory}/ntk_gram_indexes_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+    pk_gram_list = [np.load(f"{directory}/pk_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+
+    # plot dataset
+    plot_dataset(X, Y)
+    plt.title("Gaussian Mixtures dataset")
+    dataset_info = f"Dimensionality D={D}, signal noise ratio snr={snr}, size N={N}"
+    plt.figtext(0.5, 0, dataset_info, wrap=True, horizontalalignment='center', verticalalignment='bottom', fontsize=12)
+    plt.savefig(f"{subdirectory}/dataset_plot.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+    # loss of the models at the various depths (last epochs)
+    plot_model_training_loss_per_epoch(TRACES)
+    plt.title(f"Loss (training set) of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/loss_in_training_per_epoch.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+    # loss of each model during the training (one single plot)
+    plot_model_training_loss_per_depth(TRACES)
+    plt.title(f"Loss (training set) of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/loss_in_training_per_depth.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+    # (end - start) norm change of the models at the various depths (all lines in one plot, x=epoch, y=norm change)
+    plot_model_params_norm_per_epoch(TRACES)
+    plt.title(f"Norm change during training of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_epoch.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+    # norm change of each parameter, of each model
+    plot_model_parameter_norm_per_depth(TRACES)
+    plt.title(f"Norm change during training of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_depth.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+    # # target-kernel alignment of each NTK during the training + PK
+    # plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
+    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_epoch.png", dpi=300, format='png')
+    # plt.close()
+    # plt.cla()
+    # plt.clf()
+
+    # # target-kernel alignment of the last epoch NTK vs PK (varying the depth)
+    # plot_tk_alignment_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
+    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_depth.png", dpi=300, format='png')
+    # plt.close()
+    # plt.cla()
+    # plt.clf()
+
+    # SVM model accuracy of each NTK during the training + PK
+    plot_accuracy_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
+    plt.savefig(f"{subdirectory}/accuracy_in_training_per_epoch.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+    # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
+    plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
+    plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+
+def run_report(refreshplots):
+    """
+    Generate report in html format
+    :param refreshplots: if true, the plots are generated again
+    :return: nothing, the html il saved to report_<datetime>.html
+    """
+
+    # getting the directory of all experiments
+    experiments_list = [x.name for x in Path(".").iterdir() if x.is_dir() and x.name.startswith("experiment_")]
+
+    # refreshing the plots (might still have old plots, better safe than sorry right?)
+    if refreshplots == 'true':
+        for directory in experiments_list:
+            print(f"Updating plots of experiment {directory}")
+            run_analysis(directory)
+
+    # extract specs from directory name (i know, a json file was better... btw its possible to load specs_1.json)
+    regex = re.compile(r"experiment_snr([0-9.]*)_d([0-9]*)_l([a-z]*)_[0-9]*")
+    experiments_specs = [(regex.match(experiment), experiment) for experiment in experiments_list]
+    experiments_specs = [{'snr': r.group(1), 'd': r.group(2), 'loss': r.group(3), 'dir': dir} for (r, dir) in experiments_specs]
+
+    # utilities for report generation
+    filtered_specs = lambda key, value: [spec for spec in experiments_specs if spec[key] == value]
+    multi_filtered_specs = lambda assignments: [spec for spec in experiments_specs if all(spec[k] == v for k, v in assignments)]
+    title = "Gaussian Mixtures with Quantum Machine Learning models and Path Kernel"
+    gen_time = datetime.now()
+
+    # report
+    rprt = f"""
+<html>
+    <head>
+        <title>{title}</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <style>img{{max-width: 600px}}</style>
+    </head>
+    <body class="container">
+        <h1>{title}</h1>
+        <p>Generated at {gen_time.strftime('%d/%m/%Y %H:%M:%S')}</p>
+        <h2>Dataset</h2>
+        <p>The dataset is composed of N samples. Each sample has D components in the form (x1, x2, 0, 0, ..., 0)
+        where x1 and x2 are the coordinated of one of the four centroids (+-.5, +-.5) plus some noise that I've called
+        snr (signal to noise) but I'm not sure it matches the definition... Is just noise independently sampled from
+        a gaussian having mean zero and variance equal to the 'snr'. The higher the 'snr', the more noisy my dataset
+        is and the more difficult is to classify the samples. 
+        In Refinetti's work, having large value to D results in a difficult environment for random feature kernel models
+        while Neural Networks, due to their dissipative work, can easily learn the distribution reaching the optimal
+        performance of the oracle. </p>
+        {"".join(f"<p>Dataset generated with snr={spec['snr']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/dataset_plot.png'/></p>{chr(10)}" 
+                 for spec in experiments_specs)}
+        <br/>
+        <h2>QNN</h2>
+        <p>The Quantum Neural Network's variational for is, for each layer: a ZZ rotation each couple of adjacent qubits (in a 
+        circular fashion) parameterized with a single, shared parameter, and a X rotation each qubit parameterized with a single,
+        shared parameter. For L layers, there are 2L parameters. <br/> This form has the advantange that it's 
+        experimentally proven by LaRocca-Cerezo's work that does not show barren plateau. </p>
+        <h2>Loss</h2>
+        <p>The loss is the function minimized during the training phase by the optimizer. In classical deep learning 
+        theory, I should reach zero loss when I have just enough parameters to perfectly fit the data, resulting in 
+        a large generalization error. Due to double descent and the implic regularization of gradient descent 
+        optimization, adding further parameters still find a solution having zero loss which although represent a 
+        simpler function, with better generalization performances.<p>
+        <p>The loss function we can study is either the Binary Cross Entropy, which is used for classification 
+        problems such this one, and the Mean Square Error, which is used in regression problems usually but it still
+        make sense to make the comparison.</p>
+        <h4>Loss per epoch</h4>
+        <p>The following paragram study the loss of each model with respect to the epoch of training (x axis). The
+        color of the line represents how many layer the QNN has.</p>
+        <h6>Using loss BCE (Binary Cross Entropy)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'bce'))}
+        <h6>Using loss MSE (Mean Square Error)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'mse'))}
+        <br/>
+        <h4>Loss per depth</h4>
+        <p>The following paragram study the loss of each model with respect to the depth (x axis). The point on each 
+        vertical line represents the evolution of the loss at a certain depth, during the training each epoch multiple
+        of 100. The fact that the points are not evenly spread from the top to the bottom means that the loss 
+        immediately reach zero (well, in 100 epoch at least).</p>
+        <h6>Using loss BCE (Binary Cross Entropy)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'bce'))}
+        <h6>Using loss MSE (Mean Square Error)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'mse'))}
+        <br/>
+        <h2>Parameters norm change</h2>
+        <p>Parameters norm change highlight the lazy training phenomena: if the parameters stay close to their 
+        initialization then we are in a lazy training regime (a sort of, since our QNN are indeed linear model, 
+        can be really call them feature learning vs lazy regimes? isn't that just optimization?).
+        <h4>Parameters norm change per epoch</h4>
+        <p>These plots highlight the fact that after a (big or small) adjustment of the parameters, they converges 
+        quickly into a solution (n.b. note that here just the norm is checked, eventually if they are rotating they
+        will indeed change if I can't see that from this plot... It's more a technical note though). 
+        <h6>Using loss BCE (Binary Cross Entropy)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'bce'))}
+        <h6>Using loss MSE (Mean Square Error)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'mse'))}
+        <br/>
+        <h4>Parameters norm change per depth</h4>
+        <p>If the yellow-er dots stay close to the red (initial) ones then we are in lazy training. It almost never
+        happen than the norm first increase (going far from the initialization) then decreases (returning back to the
+        initialization).
+        <h6>Using loss BCE (Binary Cross Entropy)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'bce'))}
+        <h6>Using loss MSE (Mean Square Error)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'mse'))}
+        <br/>
+        <h2>Accuracy</h2>
+        <p>We compare the accuracy of the model in predicting the labels by comparing the NTK calculated (for each QNN)
+        at its last configuration, at the end of the training (1000 epoch) and the Path Kernel. 
+        The red-to-yellow line and dots are related to the Neural Tangent Kernel (1000 epoch) + SVM model.
+        The blue-to-green line and dots are related to the Path Kernel + SVM model. </p>
+        <p>Accuracy is calculated by still using the same dataset of the training (i.e. if I use the non-linearized
+        variational model instead of quantum kernel+SVM I will get zero error due to the zero loss). Considering a 
+        testing set after this preliminary results is mandatory. 
+        <h4>Accuracy per epoch</h4>
+        <p>We surely expect the accuracy is higher for small snr. <b>Preliminary thoughts</b>: it seems that with
+        small depths the NTK performs better, and with higher depths the NTK performs worse. I was expecting the
+        opposite, since the PK at small depth allows to interpret the model as a kernel machine while the NTK at small
+        depth (and thus larger parameters norm change) means nothing. We need to check it here something. Well, to tell
+        the truth, it seems to me that the performances of PK are almost the average of the performance of NTK...<br/>
+        P.S: this graph are not great. Do we know a fancier graphical representation?</p>
+        <h6>Using loss BCE (Binary Cross Entropy)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'bce'))}
+        <h6>Using loss MSE (Mean Square Error)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'mse'))}
+        <br/>
+        <h4>Accuracy per depth</h4>
+        <p>Much clearer representation... From these graphs, PK seems to win in general, especially with BCE loss! 
+        Still, we are using the same points of the training.</p>
+        <h6>Using loss BCE (Binary Cross Entropy)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'bce'))}
+        <h6>Using loss MSE (Mean Square Error)</h6>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in filtered_specs('loss', 'mse'))}
+        <br/>
+        <h2>By increasing D...</h2>
+        <p>Does it happens that, like in Refinetti's work, by increasing D the kernel machine loses performances? 
+        If that happens, it might mean that the kernel are working just like random features. We still miss some further
+        experiments to see a pattern, however:</p>
+        <p>Take loss=BCE, snr=0.50, D in[2, 3, 4, 5]</p>
+        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
+                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
+                 for spec in multi_filtered_specs([('loss', 'bce'), ('snr', '0.50')]))}
+        <br/><br/><br/><p>End of report</p><br/><br/><br/>
+    </body>
+</html>
+    """
+    print(rprt, file=open(f"report_{gen_time.strftime('%Y%m%d%H%M')}.html", "w"))
+
+
 # ========================================================================================
 # ====================================== CLI =============================================
 # ========================================================================================
@@ -483,220 +755,18 @@ def analyze(directory):
     :param directory: where the experiment data is saved
     :return: nothing, everything is saved to file
     """
-    # create analysis directory and load specifications
-    subdirectory = directory + "/analysis"
-    Path(subdirectory).mkdir(parents=True, exist_ok=True)
-    specs = json.load(open(f"{directory}/specs_1.json"))
-    X, Y, D, snr, N, loss = s2np(specs["X"]), s2np(specs["Y"]), int(specs["D"]), float(specs["snr"]), int(specs["N"]), specs["loss"]
-
-    # load trace data
-    layers_files = list(
-        filter(lambda x: x.startswith("trace"), [x.name for x in Path(directory).iterdir() if x.is_file()]))
-    MAX_LAYERS = len(layers_files)
-    TRACES = [pd.read_pickle(f"{directory}/trace_{l}.pickle") for l in range(1, MAX_LAYERS + 1)]
-    MAX_DEPTH = len(TRACES[0])
-
-    # load gram matrices
-    ntk_grams_list = [np.load(f"{directory}/ntk_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
-    ntk_gram_indexes_list = [np.load(f"{directory}/ntk_gram_indexes_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
-    pk_gram_list = [np.load(f"{directory}/pk_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
-
-    # plot dataset
-    plot_dataset(X, Y)
-    plt.title("Gaussian Mixtures dataset")
-    dataset_info = f"Dimensionality D={D}, signal noise ratio snr={snr}, size N={N}"
-    plt.figtext(0.5, 0, dataset_info, wrap=True, horizontalalignment='center', verticalalignment='bottom', fontsize=12)
-    plt.savefig(f"{subdirectory}/dataset_plot.png", dpi=300, format='png')
-
-    # loss of the models at the various depths (last epochs)
-    plot_model_training_loss_per_epoch(TRACES)
-    plt.title(f"Loss (training set) of variational models (loss={loss})")
-    plt.savefig(f"{subdirectory}/loss_in_training_per_epoch.png", dpi=300, format='png')
-
-    # loss of each model during the training (one single plot)
-    plot_model_training_loss_per_depth(TRACES)
-    plt.title(f"Loss (training set) of variational models (loss={loss})")
-    plt.savefig(f"{subdirectory}/loss_in_training_per_depth.png", dpi=300, format='png')
-
-    # (end - start) norm change of the models at the various depths (all lines in one plot, x=epoch, y=norm change)
-    plot_model_params_norm_per_epoch(TRACES)
-    plt.title(f"Norm change during training of variational models (loss={loss})")
-    plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_epoch.png", dpi=300, format='png')
-
-    # norm change of each parameter, of each model
-    plot_model_parameter_norm_per_depth(TRACES)
-    plt.title(f"Norm change during training of variational models (loss={loss})")
-    plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_depth.png", dpi=300, format='png')
-
-    # # target-kernel alignment of each NTK during the training + PK
-    # plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
-    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
-    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_epoch.png", dpi=300, format='png')
-
-    # # target-kernel alignment of the last epoch NTK vs PK (varying the depth)
-    # plot_tk_alignment_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
-    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
-    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_depth.png", dpi=300, format='png')
-
-    # SVM model accuracy of each NTK during the training + PK
-    plot_accuracy_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
-    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
-    plt.savefig(f"{subdirectory}/accuracy_in_training_per_epoch.png", dpi=300, format='png')
-
-    # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
-    plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
-    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
-    plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
+    run_analysis(directory)
 
 
 @main.command()
-def report():
+@click.option('--refreshplots', type=click.Choice(['true', 'false']), required=True)
+def report(refreshplots):
     """
     Generate report in html format
+    :param refreshplots: if true, the plots are generated again; otherwise use false
     :return: nothing, the html il saved to report_<datetime>.html
     """
-    regex = re.compile(r"experiment_snr([0-9.]*)_d([0-9]*)_l([a-z]*)_[0-9]*")
-    experiments_list = [x.name for x in Path(".").iterdir() if x.is_dir() and x.name.startswith("experiment_")]
-    experiments_specs = [(regex.match(experiment), experiment) for experiment in experiments_list]
-    experiments_specs = [{'snr': r.group(1), 'd': r.group(2), 'loss': r.group(3), 'dir': dir} for (r, dir) in experiments_specs]
-    filtered_specs = lambda key, value: [spec for spec in experiments_specs if spec[key] == value]
-    title = "Gaussian Mixtures with Quantum Machine Learning models and Path Kernel"
-    gen_time = datetime.now()
-    rprt = f"""
-<html>
-    <head>
-        <title>{title}</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-        <style>img{{max-width: 600px}}</style>
-    </head>
-    <body class="container">
-        <h1>{title}</h1>
-        <p>Generated at {gen_time.strftime('%d/%m/%Y %H:%M:%S')}</p>
-        <h2>Dataset</h2>
-        <p>The dataset is composed of N samples. Each sample has D components in the form (x1, x2, 0, 0, ..., 0)
-        where x1 and x2 are the coordinated of one of the four centroids (+-.5, +-.5) plus some noise that I've called
-        snr (signal to noise) but I'm not sure it matches the definition... Is just noise independently sampled from
-        a gaussian having mean zero and variance equal to the 'snr'. The higher the 'snr', the more noisy my dataset
-        is and the more difficult is to classify the samples. 
-        In Refinetti's work, having large value to D results in a difficult environment for random feature kernel models
-        while Neural Networks, due to their dissipative work, can easily learn the distribution reaching the optimal
-        performance of the oracle. </p>
-        {"".join(f"<p>Dataset generated with snr={spec['snr']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/dataset_plot.png'/></p>{chr(10)}" 
-                 for spec in experiments_specs)}
-        </br>
-        <h2>Loss</h2>
-        <p>The loss is the function minimized during the training phase by the optimizer. In classical deep learning 
-        theory, I should reach zero loss when I have just enough parameters to perfectly fit the data, resulting in 
-        a large generalization error. Due to double descent and the implic regularization of gradient descent 
-        optimization, adding further parameters still find a solution having zero loss which although represent a 
-        simpler function, with better generalization performances.<p>
-        <p>The loss function we can study is either the Binary Cross Entropy, which is used for classification 
-        problems such this one, and the Mean Square Error, which is used in regression problems usually but it still
-        make sense to make the comparison.</p>
-        <h4>Loss per epoch</h4>
-        <p>The following paragram study the loss of each model with respect to the epoch of training (x axis). The
-        color of the line represents how many layer the QNN has.</p>
-        <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'bce'))}
-        <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'mse'))}
-        </br>
-        <h4>Loss per depth</h4>
-        <p>The following paragram study the loss of each model with respect to the depth (x axis). The point on each 
-        vertical line represents the evolution of the loss at a certain depth, during the training each epoch multiple
-        of 100. The fact that the points are not evenly spread from the top to the bottom means that the loss 
-        immediately reach zero (well, in 100 epoch at least).</p>
-        <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'bce'))}
-        <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'mse'))}
-        </br>
-        <h2>Parameters norm change</h2>
-        <p>Parameters norm change highlight the lazy training phenomena: if the parameters stay close to their 
-        initialization then we are in a lazy training regime (a sort of, since our QNN are indeed linear model, 
-        can be really call them feature learning vs lazy regimes? isn't that just optimization?).
-        <h4>Parameters norm change per epoch</h4>
-        <p>These plots highlight the fact that after a (big or small) adjustment of the parameters, they converges 
-        quickly into a solution (n.b. note that here just the norm is checked, eventually if they are rotating they
-        will indeed change if I can't see that from this plot... It's more a technical note though). 
-        <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'bce'))}
-        <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'mse'))}
-        </br>
-        <h4>Parameters norm change per depth</h4>
-        <p>If the yellow-er dots stay close to the red (initial) ones then we are in lazy training. It almost never
-        happen than the norm first increase (going far from the initialization) then decreases (returning back to the
-        initialization).
-        <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'bce'))}
-        <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'mse'))}
-        </br>
-        <h2>Accuracy</h2>
-        <p>We compare the accuracy of the model in predicting the labels by comparing the NTK calculated (for each QNN)
-        at its last configuration, at the end of the training (1000 epoch) and the Path Kernel. 
-        The red-to-yellow line and dots are related to the Neural Tangent Kernel (1000 epoch) + SVM model.
-        The blue-to-green line and dots are related to the Path Kernel + SVM model. </p>
-        <p>Accuracy is calculated by still using the same dataset of the training (i.e. if I use the non-linearized
-        variational model instead of quantum kernel+SVM I will get zero error due to the zero loss). Considering a 
-        testing set after this preliminary results is mandatory. 
-        <h4>Accuracy per epoch</h4>
-        <p>We surely expect the accuracy is higher for small snr. <b>Preliminary thoughts</b>: it seems that with
-        small depths the NTK performs better, and with higher depths the NTK performs worse. I was expecting the
-        opposite, since the PK at small depth allows to interpret the model as a kernel machine while the NTK at small
-        depth (and thus larger parameters norm change) means nothing. We need to check it here something. Well, to tell
-        the truth, it seems to me that the performances of PK are almost the average of the performance of NTK...</br>
-        P.S: this graph are not great. Do we know a fancier graphical representation?</p>
-        <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'bce'))}
-        <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'mse'))}
-        </br>
-        <h4>Accuracy per depth</h4>
-        <p>Much clearer representation... From these graphs, PK seems to win in general, especially with BCE loss! 
-        Still, we are using the same points of the training.</p>
-        <h6>Using loss BCE (Binary Cross Entropy)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'bce'))}
-        <h6>Using loss MSE (Mean Square Error)</h6>
-        {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:</br>"
-                 f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}" 
-                 for spec in filtered_specs('loss', 'mse'))}
-        </br>
-        <h2>By increasing D...</h2>
-        <p>Does it happens that, like in Refinetti's work, by increasing D the kernel machine loses performances? 
-        If that happens, it might mean that the kernel are working just like random features. We still miss some further
-        experiments to see a pattern, however:</p>
-        <p>Take loss=MSE, snr=0.20, D=5..6</p>
-        <p>TODO</p>
-        </br></br></br><p>End of report</p></br></br></br>
-    </body>
-</html>
-    """
-    print(rprt, file=open(f"report_{gen_time.strftime('%Y%m%d%H%M')}.html", "w"))
+    run_report(refreshplots)
 
 
 if __name__ == '__main__':
