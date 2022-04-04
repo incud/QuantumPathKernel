@@ -227,14 +227,44 @@ def plot_dataset(X, Y):
     plt.legend()
 
 
+def tokenizenp(s):
+    from io import BytesIO
+    from tokenize import tokenize
+    g = tokenize(BytesIO(s.encode('utf-8')).readline)
+    tokens = []
+    for toknum, tokval, _, _, _ in g:
+        if toknum == 2 or tokval in ['[', ']']:  # either float numeric or '[', ']'
+            tokens.append(tokval)
+    return tokens
+
+
+def tokens2np(tokens, pos=0):
+    # print(f"Starting with {tokens} in position {pos}")
+    result = []
+    i = pos
+    while i < len(tokens):
+        # print("pos", i, "token", tokens[i], end="")
+        if tokens[i] == '[':
+            # print("... open")
+            subresult, newi = tokens2np(tokens, i+1)
+            result.append(subresult)
+            i = newi
+        elif tokens[i] == ']':
+            # print("... close")
+            i += 1
+            break
+        else:
+            # print("... num")
+            result.append(tokens[i])
+            i += 1
+    # print(f"Return {result} in position {i}")
+    return result, i
+
+
 def s2np(s):
-    """String [v1 v2 ... vn] to NUMPY"""
-    vs = s.replace("[", "").replace("]", "").split("\n")
-    vf = [[float(f) for f in list(filter(lambda x: len(x) > 0, vrow.split(" ")))] for vrow in vs]
-    npa = np.array(vf)
-    if npa.shape[0] == 1:
-        npa = npa.reshape(-1)
-    return npa
+    r, _ = tokens2np(tokenizenp(s))
+    npa = np.array(r[0])
+    return npa.astype('float')
 
 
 def plot_model_training_loss_per_epoch(traces):
@@ -542,6 +572,10 @@ def run_analysis(directory):
     plt.clf()
 
 
+def run_test(directory):
+    pass
+
+
 def run_report(refreshplots):
     """
     Generate report in html format
@@ -756,6 +790,17 @@ def analyze(directory):
     :return: nothing, everything is saved to file
     """
     run_analysis(directory)
+
+
+@main.command()
+@click.option('--directory', type=click.Path(exists=True))
+def test(directory):
+    """
+    Run the test over the already trained QNN
+    :param directory: where the experiment data is saved
+    :return: nothing, everything is saved to file
+    """
+    run_test(directory)
 
 
 @main.command()
