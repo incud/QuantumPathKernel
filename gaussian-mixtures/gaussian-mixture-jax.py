@@ -61,6 +61,26 @@ def create_qnn(N, layers):
     return qnn
 
 
+def calculate_mse_cost(X, Y, qnn, params, N):
+    the_cost = 0.0
+    for i in range(N):
+        x, y = X[i], Y[i]
+        yp = qnn(x, params)
+        the_cost += (y - yp)**2
+    return the_cost
+
+
+def calculate_bce_cost(X, Y, qnn, params, N):
+    the_cost = 0.0
+    epsilon = 1e-6
+    for i in range(N):
+        x, y = X[i], Y[i]
+        y = (y + 1)/2 + epsilon  # 1 label -> 1; - label -> 0
+        yp = (qnn(x, params) + 1)/2 + epsilon  # 1 label -> 1; - label -> 0
+        the_cost += y * jnp.log2(yp) + (1 - y) * jnp.log2(1 - yp)
+    return the_cost * (-1/N)
+
+
 def train_qnn(X, Y, qnn, loss, n_params, epochs):
     N, _ = X.shape
     seed = int(datetime.now().strftime('%Y%m%d%H%M%S'))
@@ -68,25 +88,6 @@ def train_qnn(X, Y, qnn, loss, n_params, epochs):
     optimizer = optax.adam(learning_rate=0.1)
     params = jax.random.normal(rng, shape=(n_params,))
     opt_state = optimizer.init(params)
-
-    def calculate_mse_cost(X, Y, qnn, params):
-        the_cost = 0.0
-        for i in range(N):
-            x, y = X[i], Y[i]
-            yp = qnn(x, params)
-            the_cost += (y - yp)**2
-        return the_cost
-
-    def calculate_bce_cost(X, Y, qnn, params):
-        the_cost = 0.0
-        epsilon = 1e-6
-        for i in range(N):
-            x, y = X[i], Y[i]
-            y = (y + 1)/2 + epsilon  # 1 label -> 1; - label -> 0
-            yp = (qnn(x, params) + 1)/2 + epsilon  # 1 label -> 1; - label -> 0
-            the_cost += y * jnp.log2(yp) + (1 - y) * jnp.log2(1 - yp)
-        return the_cost * (-1/N)
-
     calculate_cost = calculate_mse_cost if loss == "mse" else calculate_bce_cost
 
     specs = {'initial_params': str(params),
@@ -101,12 +102,12 @@ def train_qnn(X, Y, qnn, loss, n_params, epochs):
     df = pd.DataFrame(columns=['epoch', 'loss', 'params'])
     df.loc[len(df)] = {
         'epoch': 0,
-        'loss': calculate_cost(X, Y, qnn, params),
+        'loss': calculate_cost(X, Y, qnn, params, N),
         'params': params
     }
 
     for epoch in range(1, epochs+1):
-        cost, grad_circuit = jax.value_and_grad(lambda w: calculate_cost(X, Y, qnn, w))(params)
+        cost, grad_circuit = jax.value_and_grad(lambda w: calculate_cost(X, Y, qnn, w, N))(params)
         updates, opt_state = optimizer.update(grad_circuit, opt_state)
         params = optax.apply_updates(params, updates)
         df.loc[len(df)] = {
@@ -121,7 +122,7 @@ def train_qnn(X, Y, qnn, loss, n_params, epochs):
     return specs, df
 
 
-def calculate_ntk(X, qnn, df):
+def calculate_ntk(X, qnn, df, X_test=None):
 
     qnn_grad = jax.grad(qnn, argnums=(1,))
 
@@ -137,7 +138,10 @@ def calculate_ntk(X, qnn, df):
     for i, row in df.iterrows():
         params = row["params"]
         if len(ntk_gram_params) == 0 or i == len(df)-1 or np.linalg.norm(ntk_gram_params[-1] - params) >= MIN_NORM_CHANGE:
-            ntk_gram = kernel_matrix(X, X, kernel=lambda x1, x2: ntk(x1, x2, params))
+            if X_test is None:
+                ntk_gram = kernel_matrix(X, X, kernel=lambda x1, x2: ntk(x1, x2, params))
+            else:
+                ntk_gram = kernel_matrix(X, X_test, kernel=lambda x1, x2: ntk(x1, x2, params))
             ntk_grams.append(ntk_gram)
             ntk_gram_indexes.append(i)
             ntk_gram_params.append(params)
@@ -184,6 +188,61 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS):
         np.save(f"{directory}/ntk_gram_indexes_{layers}.npy", ntk_gram_indexes)
         np.save(f"{directory}/pk_gram_{layers}.npy", pk_gram)
 
+
+def run_test(directory, regenerate, n_test_samples):
+    specs_file_list = [x.name for x in Path(directory).iterdir() if x.is_file() and x.name.startswith("specs_")]
+
+    # create all specifications first (can handle partially executed tests)
+    for specs_file in specs_file_list:
+        specs = json.load(open(f"{directory}/{specs_file}"))
+        if ("X_test" not in specs) or (regenerate == 'true'):
+            snr = float(specs["snr"])
+            D = int(specs["D"])
+            X_test, Y_test = create_gaussian_mixtures(D, snr, n_test_samples)
+            specs["n_test_samples"] = n_test_samples
+            specs["X_test"] = str(X_test)
+            specs["Y_test"] = str(Y_test)
+            json.dump(specs, open(f"{directory}/{specs_file}", "w"))
+        else:
+            print(f"{specs_file} already contains a testing set! The new instructions are ignored. The old set is kept")
+
+    # run test for all files
+    testing_losses_per_layer = {}
+
+    for specs_file in specs_file_list:
+        print("\n")
+        print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Testing wrt file {specs_file}")
+
+        # read specification and check file correctness
+        specs = json.load(open(f"{directory}/{specs_file}"))
+        D, layers = int(specs["D"]), int(specs["layers"])
+        X_train, Y_train = s2np(specs["X"]), s2np(specs["Y"])
+        loss = specs["loss"]
+        N, D2 = X_train.shape
+        X_test, Y_test = s2np(specs["X_test"]), s2np(specs["Y_test"])
+        M, D3 = X_test.shape
+        assert D == D2 and D == D3, "Training and testing set has different feature dimensionality"
+
+        # load qnn and calculate cost of predicting w/ variational models
+        print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Loss ({loss}) for variational model: ", end="", flush=True)
+        trace_df = pd.read_pickle(f"{directory}/trace_{layers}.pickle")
+        params = trace_df.iloc[-1]["params"]
+        qnn = create_qnn(D, layers)
+        calculate_cost = calculate_mse_cost if loss == "mse" else calculate_bce_cost
+        cost = calculate_cost(X_test, Y_test, qnn, params, M)
+        testing_losses_per_layer[str(layers)] = str(cost)
+        print(cost, flush=True)
+
+        # NTK and PK calculation
+        print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Start NTK PK calculation")
+        ntk_test_grams, ntk_test_gram_indexes = calculate_ntk(X_train, qnn, trace_df, X_test=X_test)
+        pk_test_gram = calculate_pk(ntk_test_grams)
+        np.save(f"{directory}/ntk_test_grams_{layers}.npy", ntk_test_grams)
+        np.save(f"{directory}/ntk_test_gram_indexes_{layers}.npy", ntk_test_gram_indexes)
+        np.save(f"{directory}/pk_test_gram_{layers}.npy", pk_test_gram)
+        json.dump(testing_losses_per_layer, open(f"{directory}/testing_losses_per_layer.json", "w"))
+        print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - End")
+
 # ========================================================================================
 # ====================================== PLOTS ===========================================
 # ========================================================================================
@@ -205,11 +264,11 @@ def calculate_tk_alignment(K1, K2, centered=False):
     return np.sum(K1 * K2) / np.linalg.norm(K1) / np.linalg.norm(K2)
 
 
-def calculate_svc_accuracy(K, Y):
+def calculate_svc_accuracy(K, K_test, Y, Y_test):
     regr = SVC(kernel='precomputed')
     regr.fit(K.T, Y)
-    Y_actual = regr.predict(K.T)
-    accuracy = np.sum(Y_actual == Y) / len(Y)
+    Y_actual = regr.predict(K_test.T)
+    accuracy = np.sum(Y_actual == Y_test) / len(Y_test)
     return accuracy
 
 
@@ -233,7 +292,7 @@ def tokenizenp(s):
     g = tokenize(BytesIO(s.encode('utf-8')).readline)
     tokens = []
     for toknum, tokval, _, _, _ in g:
-        if toknum == 2 or tokval in ['[', ']']:  # either float numeric or '[', ']'
+        if toknum == 2 or tokval in ['[', ']', '-']:  # either float numeric or '[', ']' or '-'
             tokens.append(tokval)
     return tokens
 
@@ -242,6 +301,7 @@ def tokens2np(tokens, pos=0):
     # print(f"Starting with {tokens} in position {pos}")
     result = []
     i = pos
+    sign = ''
     while i < len(tokens):
         # print("pos", i, "token", tokens[i], end="")
         if tokens[i] == '[':
@@ -253,9 +313,14 @@ def tokens2np(tokens, pos=0):
             # print("... close")
             i += 1
             break
+        elif tokens[i] == '-':
+            # print("... negate")
+            sign = '-'
+            i += 1
         else:
-            # print("... num")
-            result.append(tokens[i])
+            # print(f"... num ({tokens[i]})")
+            result.append(sign + tokens[i])
+            sign = ''
             i += 1
     # print(f"Return {result} in position {i}")
     return result, i
@@ -341,32 +406,36 @@ def plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gra
     plt.legend()
 
 
-def plot_accuracy_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
-    """
-    Plot the target kernel alignment per epoch
-    X = epochs; Y = loss
-    :param traces:
-    :return:
-    """
-    M = len(Y)
-    N = len(ntk_grams_list)
-    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
-
-    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
-    plt.figure()
-    for i, (ntk_grams, ntk_indexes) in enumerate(zip(ntk_grams_list, ntk_gram_indexes_list)):
-        x = ntk_indexes
-        y = [calculate_svc_accuracy(ntk_gram, Y) for ntk_gram in ntk_grams]
-        plt.plot(x, y, color=color_palette[i], label=f"NTK (depth {i + 1})")
-
-    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
-    for i in range(N):
-        y = calculate_svc_accuracy(pk_grams[i], Y)
-        plt.scatter([-100], [y], label=f"PK (depth {i+1})", color=color_palette[i])
-
-    plt.xlabel("Epochs of training")
-    plt.ylabel(r"Accuracy")
-    plt.legend()
+# def plot_accuracy_per_epoch(Y_list, ntk_grams_list, ntk_gram_indexes_list, pk_grams,
+#                             Y_test_list, ntk_test_grams_list, pk_test_grams, is_test=False):
+#     """
+#     Plot the target kernel alignment per epoch
+#     X = epochs; Y = loss
+#     :param traces:
+#     :return:
+#     """
+#     N = len(ntk_grams_list)
+#     if not is_test:
+#         Y_test_list = Y_list
+#         ntk_test_grams_list = ntk_grams_list
+#         pk_test_grams = pk_grams
+#
+#     color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
+#     plt.figure()
+#     for i in range(len(ntk_gram_indexes_list)):
+#         x = ntk_gram_indexes_list[i]
+#         y = [calculate_svc_accuracy(ntk_gram, ntk_test_gram, Y_list[i], Y_test_list[i])
+#              for ntk_gram, ntk_test_gram in zip(ntk_grams_list[i], ntk_test_grams_list[i])]
+#         plt.plot(x, y, label=f"NTK (depth {i + 1})", color=color_palette[i])
+#
+#     color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
+#     for i in range(N):
+#         y = calculate_svc_accuracy(pk_grams[i], pk_test_grams[i], Y_list[i], Y_test_list[i])
+#         plt.scatter([-100], [y], label=f"PK (depth {i+1})", color=color_palette[i])
+#
+#     plt.xlabel("Epochs of training")
+#     plt.ylabel(r"Accuracy")
+#     plt.legend()
 
 
 def plot_model_training_loss_per_depth(traces):
@@ -416,56 +485,30 @@ def plot_model_parameter_norm_per_depth(traces):
     plt.tight_layout()
 
 
-def plot_tk_alignment_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
+def plot_accuracy_per_depth(Y_list, ntk_grams_list, pk_grams,
+                            Y_test_list, ntk_test_grams_list, pk_test_grams,
+                            is_test=False):
     """
     Plot the target kernel alignment per epoch
     X = epochs; Y = loss
     :param traces:
     :return:
     """
-    M = len(Y)
     N = len(ntk_grams_list)
-    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
-    plt.figure()
-
-    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
-    for i in range(N):
-        y = calculate_tk_alignment(YYt, ntk_grams_list[i][-1])
-        plt.scatter([i+1], [y], label=f"NTK (depth {i+1})", color=color_palette[i])
-
-    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
-    for i in range(N):
-        y = calculate_tk_alignment(YYt, pk_grams[i])
-        plt.scatter([i+1], [y], label=f"PK (depth {i+1})", color=color_palette[i])
-
-    plt.xlabel("Depth")
-    plt.ylabel(r"Target-Kernel alignment")
-    plt.legend()
-
-
-def plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
-    """
-    Plot the target kernel alignment per epoch
-    X = epochs; Y = loss
-    :param traces:
-    :return:
-    """
-    M = len(Y)
-    N = len(ntk_grams_list)
-    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
     plt.figure(figsize=(5, 5))
+    if not is_test:
+        Y_test_list = Y_list
+        ntk_test_grams_list = ntk_grams_list
+        pk_test_grams = pk_grams
 
-    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
-    for i in range(N):
-        y = calculate_svc_accuracy(ntk_grams_list[i][-1], Y)
-        if y < 0:
-            print(f"NTK gram matrix {i} has y={y}<0")
-        plt.scatter([i+1], [y], label=f"NTK (depth {i+1})", color=color_palette[i])
+    # color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
+    x = [i+1 for i in range(N)]
+    y_ntk = [calculate_svc_accuracy(ntk_grams_list[i][-1], ntk_test_grams_list[i][-1], Y_list[i], Y_test_list[i]) for i in range(N)]
+    plt.plot(x, y_ntk, label=f"NTK", color='red', linewidth=2.5)
 
-    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
-    for i in range(N):
-        y = calculate_svc_accuracy(pk_grams[i], Y)
-        plt.scatter([i+1], [y], label=f"PK (depth {i+1})", color=color_palette[i])
+    # color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
+    y_pk = [calculate_svc_accuracy(pk_grams[i], pk_test_grams[i], Y_list[i], Y_test_list[i]) for i in range(N)]
+    plt.plot(x, y_pk, label=f"PK", color='blue', linewidth=1.5)
 
     plt.xlabel("Depth")
     plt.ylabel(r"Accuracy")
@@ -483,7 +526,7 @@ def run_analysis(directory):
     subdirectory = directory + "/analysis"
     Path(subdirectory).mkdir(parents=True, exist_ok=True)
     specs = json.load(open(f"{directory}/specs_1.json"))
-    X, Y, D, snr, N, loss = s2np(specs["X"]), s2np(specs["Y"]), int(specs["D"]), float(specs["snr"]), int(specs["N"]), specs["loss"]
+    D, snr, N, loss = int(specs["D"]), float(specs["snr"]), int(specs["N"]), specs["loss"]
 
     # load trace data
     layers_files = list(
@@ -492,14 +535,35 @@ def run_analysis(directory):
     TRACES = [pd.read_pickle(f"{directory}/trace_{l}.pickle") for l in range(1, MAX_LAYERS + 1)]
     MAX_DEPTH = len(TRACES[0])
 
+    # load X, Y data
+    X_list = []
+    Y_list = []
+    X_test_list = []
+    Y_test_list = []
+    for i in range(1, MAX_LAYERS+1):
+        # load specifications
+        specs_ = json.load(open(f"{directory}/specs_{i}.json"))
+        # check data coherency
+        D_, snr_, N_, loss_ = int(specs_["D"]), float(specs_["snr"]), int(specs_["N"]), specs_["loss"]
+        assert D == D_ and snr == snr_ and N == N_ and loss == loss_, "Specification missmatch"
+        # load X Y
+        X_, Y_ = s2np(specs_["X"]), s2np(specs_["Y"])
+        X_list.append(X_)
+        Y_list.append(Y_)
+        # load X_test Y_test if exists
+        if "X_test" in specs_:
+            X_test_, Y_test_ = s2np(specs_["X_test"]), s2np(specs_["Y_test"])
+            X_test_list.append(X_test_)
+            Y_test_list.append(Y_test_)
+
     # load gram matrices
     ntk_grams_list = [np.load(f"{directory}/ntk_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
     ntk_gram_indexes_list = [np.load(f"{directory}/ntk_gram_indexes_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
     pk_gram_list = [np.load(f"{directory}/pk_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
 
-    # plot dataset
-    plot_dataset(X, Y)
-    plt.title("Gaussian Mixtures dataset")
+    # plot dataset (the dataset generated for the first QNN)
+    plot_dataset(X_list[0], Y_list[0])
+    plt.title("Gaussian Mixtures dataset (e.g. for QNN with 1 layer)")
     dataset_info = f"Dimensionality D={D}, signal noise ratio snr={snr}, size N={N}"
     plt.figtext(0.5, 0, dataset_info, wrap=True, horizontalalignment='center', verticalalignment='bottom', fontsize=12)
     plt.savefig(f"{subdirectory}/dataset_plot.png", dpi=300, format='png')
@@ -539,41 +603,51 @@ def run_analysis(directory):
     plt.cla()
     plt.clf()
 
-    # # target-kernel alignment of each NTK during the training + PK
-    # plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
-    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
-    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_epoch.png", dpi=300, format='png')
+    # # SVM model accuracy of each NTK during the training + PK
+    # plot_accuracy_per_epoch(Y_list, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list, None, None, None, is_test=False)
+    # plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
+    # plt.savefig(f"{subdirectory}/accuracy_in_training_per_epoch.png", dpi=300, format='png')
     # plt.close()
     # plt.cla()
     # plt.clf()
-
-    # # target-kernel alignment of the last epoch NTK vs PK (varying the depth)
-    # plot_tk_alignment_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
-    # plt.title(f"Target-kernel alignment during training of NTK and PK (loss={loss})")
-    # plt.savefig(f"{subdirectory}/target_kernel_alignment_in_training_per_depth.png", dpi=300, format='png')
-    # plt.close()
-    # plt.cla()
-    # plt.clf()
-
-    # SVM model accuracy of each NTK during the training + PK
-    plot_accuracy_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
-    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
-    plt.savefig(f"{subdirectory}/accuracy_in_training_per_epoch.png", dpi=300, format='png')
-    plt.close()
-    plt.cla()
-    plt.clf()
 
     # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
-    plot_accuracy_per_depth(Y, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list)
+    plot_accuracy_per_depth(Y_list, ntk_grams_list, pk_gram_list,
+                            None, None, None, is_test=False)
     plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
     plt.close()
     plt.cla()
     plt.clf()
 
+    # data for testing plot
+    if "X_test" not in specs:
+        print("Testing data not present! Skipped")
+        return
 
-def run_test(directory):
-    pass
+    print("TESTING PHASE")
+    # loading testing data
+    ntk_test_grams_list = [np.load(f"{directory}/ntk_test_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+    ntk_test_gram_indexes_list = [np.load(f"{directory}/ntk_test_gram_indexes_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+    pk_test_gram_list = [np.load(f"{directory}/pk_test_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+
+    # SVM model accuracy of each NTK during the testing + PK
+    # plot_accuracy_per_epoch(Y_list, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list,
+    #                         Y_test_list, ntk_test_grams_list, pk_test_gram_list, is_test=True)
+    # plt.title(f"SVM accuracy during testing of NTK and PK (loss={loss})")
+    # plt.savefig(f"{subdirectory}/accuracy_in_testing_per_epoch.png", dpi=300, format='png')
+    # plt.close()
+    # plt.cla()
+    # plt.clf()
+
+    # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
+    plot_accuracy_per_depth(Y_list, ntk_grams_list, pk_gram_list,
+                            Y_test_list, ntk_test_grams_list, pk_test_gram_list, is_test=True)
+    plt.title(f"SVM accuracy during testing of NTK and PK (loss={loss})")
+    plt.savefig(f"{subdirectory}/accuracy_in_testing_per_depth.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
 
 
 def run_report(refreshplots):
@@ -794,13 +868,16 @@ def analyze(directory):
 
 @main.command()
 @click.option('--directory', type=click.Path(exists=True))
-def test(directory):
+@click.option('--regenerate', default='false', type=click.Choice(['true', 'false']), required=False)
+@click.option('--m', default=16, type=int, required=False)
+def test(directory, regenerate, m):
     """
     Run the test over the already trained QNN
     :param directory: where the experiment data is saved
+    :param m: number of test samples
     :return: nothing, everything is saved to file
     """
-    run_test(directory)
+    run_test(directory, regenerate, m)
 
 
 @main.command()
