@@ -99,3 +99,9 @@ Welcome
 
 06/04/2022 12:59:30 - Testing wrt file specs_18.json
 06/04/2022 12:59:30 - Loss (bce) for variational model: 0.97609574
+06/04/2022 12:59:38 - Start NTK PK calculation
+06/04/2022 15:48:37 - End
+
+
+06/04/2022 15:48:37 - Testing wrt file specs_19.json
+06/04/2022 15:48:37 - Loss (bce) for variational model: 0.85806787
