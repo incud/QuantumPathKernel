@@ -81,3 +81,11 @@ Welcome
 
 07/04/2022 13:51:47 - Testing wrt file specs_14.json
 07/04/2022 13:51:47 - Loss (mse) for variational model: 13.695274
+07/04/2022 13:51:52 - Start NTK PK calculation
+07/04/2022 14:29:33 - End
+
+
+07/04/2022 14:29:33 - Testing wrt file specs_15.json
+07/04/2022 14:29:33 - Loss (mse) for variational model: 13.403644
+07/04/2022 14:29:37 - Start NTK PK calculation
+07/04/2022 15:26:36 - End
