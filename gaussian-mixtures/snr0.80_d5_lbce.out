@@ -1,97 +1,93 @@
 Welcome
+specs_1.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_2.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_3.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_4.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_5.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_6.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_7.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_8.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_9.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_10.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_11.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_12.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_13.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_14.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_15.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_16.json already contains a testing set! The new instructions are ignored. The old set is kept
 
 
-06/04/2022 10:51:01 - Testing wrt file specs_1.json
-06/04/2022 10:51:01 - Loss (bce) for variational model: 1.0067321
-06/04/2022 10:51:03 - Start NTK PK calculation
-06/04/2022 10:52:14 - End
+07/04/2022 09:40:26 - Testing wrt file specs_1.json
+07/04/2022 09:40:26 - Loss (bce) for variational model: 1.0067321
+07/04/2022 09:40:29 - Start NTK PK calculation
+07/04/2022 09:41:40 - End
 
 
-06/04/2022 10:52:14 - Testing wrt file specs_2.json
-06/04/2022 10:52:14 - Loss (bce) for variational model: 0.96239954
-06/04/2022 10:52:15 - Start NTK PK calculation
-06/04/2022 10:56:02 - End
+07/04/2022 09:41:40 - Testing wrt file specs_2.json
+07/04/2022 09:41:40 - Loss (bce) for variational model: 0.96239954
+07/04/2022 09:41:41 - Start NTK PK calculation
+07/04/2022 09:45:31 - End
 
 
-06/04/2022 10:56:02 - Testing wrt file specs_3.json
-06/04/2022 10:56:02 - Loss (bce) for variational model: 0.9372807
-06/04/2022 10:56:03 - Start NTK PK calculation
-06/04/2022 11:01:14 - End
+07/04/2022 09:45:31 - Testing wrt file specs_3.json
+07/04/2022 09:45:31 - Loss (bce) for variational model: 0.9372807
+07/04/2022 09:45:32 - Start NTK PK calculation
+07/04/2022 09:50:49 - End
 
 
-06/04/2022 11:01:14 - Testing wrt file specs_4.json
-06/04/2022 11:01:14 - Loss (bce) for variational model: 1.0223187
-06/04/2022 11:01:15 - Start NTK PK calculation
-06/04/2022 11:14:23 - End
+07/04/2022 09:50:49 - Testing wrt file specs_4.json
+07/04/2022 09:50:49 - Loss (bce) for variational model: 1.0223187
+07/04/2022 09:50:50 - Start NTK PK calculation
+07/04/2022 10:04:00 - End
 
 
-06/04/2022 11:14:23 - Testing wrt file specs_5.json
-06/04/2022 11:14:23 - Loss (bce) for variational model: 0.8880743
-06/04/2022 11:14:25 - Start NTK PK calculation
-06/04/2022 11:33:13 - End
+07/04/2022 10:04:00 - Testing wrt file specs_5.json
+07/04/2022 10:04:00 - Loss (bce) for variational model: 0.8880743
+07/04/2022 10:04:02 - Start NTK PK calculation
+07/04/2022 10:23:10 - End
 
 
-06/04/2022 11:33:13 - Testing wrt file specs_6.json
-06/04/2022 11:33:13 - Loss (bce) for variational model: 0.7657437
-06/04/2022 11:33:15 - Start NTK PK calculation
-06/04/2022 11:50:43 - End
+07/04/2022 10:23:10 - Testing wrt file specs_6.json
+07/04/2022 10:23:10 - Loss (bce) for variational model: 0.7657437
+07/04/2022 10:23:12 - Start NTK PK calculation
+07/04/2022 10:40:49 - End
 
 
-06/04/2022 11:50:43 - Testing wrt file specs_7.json
-06/04/2022 11:50:43 - Loss (bce) for variational model: 0.9325126
-06/04/2022 11:50:45 - Start NTK PK calculation
-06/04/2022 12:07:00 - End
+07/04/2022 10:40:49 - Testing wrt file specs_7.json
+07/04/2022 10:40:49 - Loss (bce) for variational model: 0.9325126
+07/04/2022 10:40:50 - Start NTK PK calculation
+07/04/2022 10:57:36 - End
 
 
-06/04/2022 12:07:00 - Testing wrt file specs_8.json
-06/04/2022 12:07:00 - Loss (bce) for variational model: 0.88754743
-06/04/2022 12:07:03 - Start NTK PK calculation
-06/04/2022 12:33:10 - End
+07/04/2022 10:57:36 - Testing wrt file specs_8.json
+07/04/2022 10:57:36 - Loss (bce) for variational model: 0.88754743
+07/04/2022 10:57:38 - Start NTK PK calculation
+07/04/2022 11:24:09 - End
 
 
-06/04/2022 12:33:10 - Testing wrt file specs_9.json
-06/04/2022 12:33:10 - Loss (bce) for variational model: 0.85800755
-06/04/2022 12:33:13 - Start NTK PK calculation
-06/04/2022 13:02:44 - End
+07/04/2022 11:24:09 - Testing wrt file specs_9.json
+07/04/2022 11:24:09 - Loss (bce) for variational model: 0.85800755
+07/04/2022 11:24:11 - Start NTK PK calculation
+07/04/2022 11:54:47 - End
 
 
-06/04/2022 13:02:44 - Testing wrt file specs_10.json
-06/04/2022 13:02:44 - Loss (bce) for variational model: 0.9310279
-06/04/2022 13:02:47 - Start NTK PK calculation
-06/04/2022 13:23:59 - End
+07/04/2022 11:54:47 - Testing wrt file specs_10.json
+07/04/2022 11:54:47 - Loss (bce) for variational model: 0.9310279
+07/04/2022 11:54:49 - Start NTK PK calculation
+07/04/2022 12:16:43 - End
 
 
-06/04/2022 13:23:59 - Testing wrt file specs_11.json
-06/04/2022 13:23:59 - Loss (bce) for variational model: 0.8842588
-06/04/2022 13:24:02 - Start NTK PK calculation
-06/04/2022 13:57:15 - End
+07/04/2022 12:16:43 - Testing wrt file specs_11.json
+07/04/2022 12:16:43 - Loss (bce) for variational model: 0.8842588
+07/04/2022 12:16:46 - Start NTK PK calculation
+07/04/2022 12:49:36 - End
 
 
-06/04/2022 13:57:15 - Testing wrt file specs_12.json
-06/04/2022 13:57:15 - Loss (bce) for variational model: 0.96564615
-06/04/2022 13:57:18 - Start NTK PK calculation
-06/04/2022 14:41:18 - End
+07/04/2022 12:49:36 - Testing wrt file specs_12.json
+07/04/2022 12:49:36 - Loss (bce) for variational model: 0.96564615
+07/04/2022 12:49:40 - Start NTK PK calculation
+07/04/2022 13:33:12 - End
 
 
-06/04/2022 14:41:18 - Testing wrt file specs_13.json
-06/04/2022 14:41:18 - Loss (bce) for variational model: 0.86090606
-06/04/2022 14:41:22 - Start NTK PK calculation
-06/04/2022 15:19:01 - End
-
-
-06/04/2022 15:19:01 - Testing wrt file specs_14.json
-06/04/2022 15:19:01 - Loss (bce) for variational model: 0.84444016
-06/04/2022 15:19:05 - Start NTK PK calculation
-06/04/2022 16:11:20 - End
-
-
-06/04/2022 16:11:20 - Testing wrt file specs_15.json
-06/04/2022 16:11:20 - Loss (bce) for variational model: 0.8069705
-06/04/2022 16:11:24 - Start NTK PK calculation
-06/04/2022 16:52:39 - End
-
-
-06/04/2022 16:52:39 - Testing wrt file specs_16.json
-06/04/2022 16:52:39 - Loss (bce) for variational model: 0.8551363
-06/04/2022 16:52:43 - Start NTK PK calculation
-06/04/2022 17:23:39 - End
+07/04/2022 13:33:12 - Testing wrt file specs_13.json
+07/04/2022 13:33:12 - Loss (bce) for variational model: 0.86090606
