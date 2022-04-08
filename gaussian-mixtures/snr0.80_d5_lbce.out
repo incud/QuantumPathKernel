@@ -103,3 +103,11 @@ specs_16.json already contains a testing set! The new instructions are ignored. 
 
 07/04/2022 15:03:53 - Testing wrt file specs_15.json
 07/04/2022 15:03:53 - Loss (bce) for variational model: 0.8069705
+07/04/2022 15:03:57 - Start NTK PK calculation
+07/04/2022 15:46:07 - End
+
+
+07/04/2022 15:46:07 - Testing wrt file specs_16.json
+07/04/2022 15:46:07 - Loss (bce) for variational model: 0.8551363
+07/04/2022 15:46:12 - Start NTK PK calculation
+07/04/2022 16:17:17 - End
