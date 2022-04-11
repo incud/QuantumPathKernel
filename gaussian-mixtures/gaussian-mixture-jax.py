@@ -168,9 +168,19 @@ def run_qnn(X, Y, loss, layers, epochs):
     return specs, df, ntk_grams, ntk_gram_indexes, pk_gram
 
 
-def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS):
+def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None):
 
-    X, Y = create_gaussian_mixtures(D, snr, N)
+    if directory_dataset is None:
+        print("Generating new training set")
+        X, Y = create_gaussian_mixtures(D, snr, N)
+    else:
+        print("Loading existing training set")
+        preex_specs = json.load(open(f"{directory_dataset}/specs_1.json"))
+        D_, snr_, N_ = int(preex_specs['D']), float(preex_specs['snr']), int(preex_specs['N'])
+        assert D == D_ and snr == snr_ and N == N_, \
+            f"Existing directory do not match specifications (D={D}!={D_} snr={snr}!={snr_} N={N}!={N_})"
+        X, Y = s2np(preex_specs['X']), s2np(preex_specs['Y'])
+
     directory = f"experiment_snr{snr:0.2f}_d{D}_l{loss}_{datetime.now().strftime('%Y%m%d%H%M')}"
     Path(directory).mkdir(parents=True, exist_ok=True)
 
@@ -182,6 +192,8 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS):
         specs["loss"] = loss
         specs["MAX_LAYERS"] = MAX_LAYERS
         specs["MAX_EPOCHS"] = MAX_EPOCHS
+        specs["directory_dataset"] = directory_dataset
+        specs["directory_dataset_specs"] = "specs_1.json"
         json.dump(specs, open(f"{directory}/specs_{layers}.json", "w"))
         df.to_pickle(f"{directory}/trace_{layers}.pickle")
         np.save(f"{directory}/ntk_grams_{layers}.npy", ntk_grams)
@@ -270,6 +282,14 @@ def calculate_svc_accuracy(K, K_test, Y, Y_test):
     Y_actual = regr.predict(K_test.T)
     accuracy = np.sum(Y_actual == Y_test) / len(Y_test)
     return accuracy
+
+
+def calculate_oracle_accuracy(X_, Y_):
+    correct = 0
+    for x, y in zip(X_, Y_):
+        y_actual = np.sign(x[0] * x[1])
+        correct += 1 if y_actual == y else 0
+    return correct / len(Y_)
 
 
 def plot_dataset(X, Y):
@@ -485,8 +505,8 @@ def plot_model_parameter_norm_per_depth(traces):
     plt.tight_layout()
 
 
-def plot_accuracy_per_depth(Y_list, ntk_grams_list, pk_grams,
-                            Y_test_list, ntk_test_grams_list, pk_test_grams,
+def plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_grams,
+                            X_test_list, Y_test_list, ntk_test_grams_list, pk_test_grams,
                             is_test=False):
     """
     Plot the target kernel alignment per epoch
@@ -504,11 +524,17 @@ def plot_accuracy_per_depth(Y_list, ntk_grams_list, pk_grams,
     # color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
     x = [i+1 for i in range(N)]
     y_ntk = [calculate_svc_accuracy(ntk_grams_list[i][-1], ntk_test_grams_list[i][-1], Y_list[i], Y_test_list[i]) for i in range(N)]
-    plt.plot(x, y_ntk, label=f"NTK", color='red', linewidth=2.5)
+    plt.scatter(x, y_ntk, label=f"NTK", color='red')
 
     # color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
     y_pk = [calculate_svc_accuracy(pk_grams[i], pk_test_grams[i], Y_list[i], Y_test_list[i]) for i in range(N)]
-    plt.plot(x, y_pk, label=f"PK", color='blue', linewidth=1.5)
+    plt.scatter(x, y_pk, label=f"PK", color='blue')
+
+    if not is_test:
+        y_oracle = [calculate_oracle_accuracy(X_list[i], Y_list[i]) for i in range(N)]
+    else:
+        y_oracle = [calculate_oracle_accuracy(X_test_list[i], Y_test_list[i]) for i in range(N)]
+    plt.scatter(x, y_oracle, label=f"Oracle", color='green')
 
     plt.xlabel("Depth")
     plt.ylabel(r"Accuracy")
@@ -613,8 +639,8 @@ def run_analysis(directory):
     # plt.clf()
 
     # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
-    plot_accuracy_per_depth(Y_list, ntk_grams_list, pk_gram_list,
-                            None, None, None, is_test=False)
+    plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_gram_list,
+                            None, None, None, None, is_test=False)
     plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
     plt.close()
@@ -642,8 +668,8 @@ def run_analysis(directory):
     # plt.clf()
 
     # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
-    plot_accuracy_per_depth(Y_list, ntk_grams_list, pk_gram_list,
-                            Y_test_list, ntk_test_grams_list, pk_test_gram_list, is_test=True)
+    plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_gram_list,
+                            X_test_list, Y_test_list, ntk_test_grams_list, pk_test_gram_list, is_test=True)
     plt.title(f"SVM accuracy during testing of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_testing_per_depth.png", dpi=300, format='png')
     plt.close()
@@ -831,7 +857,7 @@ def run_report(refreshplots):
         <h1>{title}</h1>
         <p>Generated at {gen_time.strftime('%d/%m/%Y %H:%M:%S')}</p>
         <p>List of experiments: <ul>
-        {"".join(f"<li>{spec['dir']}</li>"
+        {"".join(f"<li>{spec['dir']}</li>{chr(10)}"
                  for spec in experiments_specs)}
         </ul></p>
         {"".join(f"<p>Showing experiment w/ d={spec['d']}, white noise={spec['snr']} loss={spec['loss']}:<br/>"
@@ -849,7 +875,7 @@ def run_report(refreshplots):
                  f"<td><img src='{spec['dir']}/analysis/accuracy_in_testing_per_depth.png'/></td></tr>"
                  f"<tr><td>Accuracy in training phase (check interpolation)</td>"
                  f"<td>Accuracy in testing phase (check generalization)</td></tr>"
-                 f"</table><br/></p>"
+                 f"</table><br/></p>{chr(10)}"
                  for spec in experiments_specs)}
     </body>
 </html>
@@ -875,7 +901,8 @@ def main():
 @click.option('--loss', type=click.Choice(['mse', 'bce']), required=True)
 @click.option('--layers', default=20, type=int)
 @click.option('--epochs', default=1000, type=int)
-def experiment(d, snr, n, loss, layers, epochs):
+@click.option('--directoryds', type=click.Path(exists=True), required=False)
+def experiment(d, snr, n, loss, layers, epochs, directoryds):
     """
     Start the experiments
     :param d: dimensionality of the data (at least 2
@@ -887,7 +914,7 @@ def experiment(d, snr, n, loss, layers, epochs):
     :return: nothing, everything is saved to file
     """
     print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
-    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs)
+    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs, directory_dataset=directoryds)
 
 
 @main.command()
