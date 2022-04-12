@@ -168,7 +168,7 @@ def run_qnn(X, Y, loss, layers, epochs):
     return specs, df, ntk_grams, ntk_gram_indexes, pk_gram
 
 
-def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None):
+def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, skipto=None):
 
     if directory_dataset is None:
         print("Generating new training set")
@@ -184,7 +184,16 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None):
     directory = f"experiment_snr{snr:0.2f}_d{D}_l{loss}_{datetime.now().strftime('%Y%m%d%H%M')}"
     Path(directory).mkdir(parents=True, exist_ok=True)
 
+    if skipto is not None:
+        print(f"--skipto {skipto} option detected")
+        assert skipto >= 1, "--skipto must be greater than one"
+        assert skipto <= MAX_LAYERS, "--skipto must be lower than MAX_LAYERS"
+
     for layers in range(1, MAX_LAYERS+1):
+        if layers < skipto:
+            print(f"QNN with {layers} layers skipped due to --skipto {skipto} option")
+            continue
+
         specs, df, ntk_grams, ntk_gram_indexes, pk_gram = run_qnn(X, Y, loss, layers=layers, epochs=MAX_EPOCHS)
         specs["D"] = D
         specs["snr"] = snr
@@ -201,7 +210,7 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None):
         np.save(f"{directory}/pk_gram_{layers}.npy", pk_gram)
 
 
-def run_test(directory, regenerate, n_test_samples):
+def run_test(directory, regenerate, n_test_samples, skipto=None):
     specs_file_list = [x.name for x in Path(directory).iterdir() if x.is_file() and x.name.startswith("specs_")]
 
     # create all specifications first (can handle partially executed tests)
@@ -217,6 +226,10 @@ def run_test(directory, regenerate, n_test_samples):
             json.dump(specs, open(f"{directory}/{specs_file}", "w"))
         else:
             print(f"{specs_file} already contains a testing set! The new instructions are ignored. The old set is kept")
+
+    if skipto is not None:
+        print(f"--skipto {skipto} option detected")
+        assert skipto >= 1, "--skipto must be greater than one"
 
     # run test for all files
     testing_losses_per_layer = {}
@@ -234,6 +247,11 @@ def run_test(directory, regenerate, n_test_samples):
         X_test, Y_test = s2np(specs["X_test"]), s2np(specs["Y_test"])
         M, D3 = X_test.shape
         assert D == D2 and D == D3, "Training and testing set has different feature dimensionality"
+
+        # skipto option
+        if layers < skipto:
+            print(f"QNN with {layers} layers skipped due to --skipto {skipto} option")
+            continue
 
         # load qnn and calculate cost of predicting w/ variational models
         print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Loss ({loss}) for variational model: ", end="", flush=True)
@@ -902,7 +920,8 @@ def main():
 @click.option('--layers', default=20, type=int)
 @click.option('--epochs', default=1000, type=int)
 @click.option('--directoryds', type=click.Path(exists=True), required=False)
-def experiment(d, snr, n, loss, layers, epochs, directoryds):
+@click.option('--skipto', type=int, required=False)
+def experiment(d, snr, n, loss, layers, epochs, directoryds, skipto):
     """
     Start the experiments
     :param d: dimensionality of the data (at least 2
@@ -914,7 +933,7 @@ def experiment(d, snr, n, loss, layers, epochs, directoryds):
     :return: nothing, everything is saved to file
     """
     print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
-    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs, directory_dataset=directoryds)
+    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs, directory_dataset=directoryds, skipto=skipto)
 
 
 @main.command()
@@ -932,14 +951,15 @@ def analyze(directory):
 @click.option('--directory', type=click.Path(exists=True))
 @click.option('--regenerate', default='false', type=click.Choice(['true', 'false']), required=False)
 @click.option('--m', default=16, type=int, required=False)
-def test(directory, regenerate, m):
+@click.option('--skipto', type=int, required=False)
+def test(directory, regenerate, m, skipto):
     """
     Run the test over the already trained QNN
     :param directory: where the experiment data is saved
     :param m: number of test samples
     :return: nothing, everything is saved to file
     """
-    run_test(directory, regenerate, m)
+    run_test(directory, regenerate, m, skipto)
 
 
 @main.command()
