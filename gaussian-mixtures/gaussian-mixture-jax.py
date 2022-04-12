@@ -190,7 +190,7 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, sk
         assert skipto <= MAX_LAYERS, "--skipto must be lower than MAX_LAYERS"
 
     for layers in range(1, MAX_LAYERS+1):
-        if layers < skipto:
+        if skipto is not None and layers < skipto:
             print(f"QNN with {layers} layers skipped due to --skipto {skipto} option")
             continue
 
@@ -249,7 +249,7 @@ def run_test(directory, regenerate, n_test_samples, skipto=None):
         assert D == D2 and D == D3, "Training and testing set has different feature dimensionality"
 
         # skipto option
-        if layers < skipto:
+        if skipto is not None and layers < skipto:
             print(f"QNN with {layers} layers skipped due to --skipto {skipto} option")
             continue
 
