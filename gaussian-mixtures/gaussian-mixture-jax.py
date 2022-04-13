@@ -210,22 +210,36 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, sk
         np.save(f"{directory}/pk_gram_{layers}.npy", pk_gram)
 
 
-def run_test(directory, regenerate, n_test_samples, skipto=None):
+def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=None):
     specs_file_list = [x.name for x in Path(directory).iterdir() if x.is_file() and x.name.startswith("specs_")]
 
     # create all specifications first (can handle partially executed tests)
-    for specs_file in specs_file_list:
-        specs = json.load(open(f"{directory}/{specs_file}"))
-        if ("X_test" not in specs) or (regenerate == 'true'):
-            snr = float(specs["snr"])
-            D = int(specs["D"])
-            X_test, Y_test = create_gaussian_mixtures(D, snr, n_test_samples)
-            specs["n_test_samples"] = n_test_samples
-            specs["X_test"] = str(X_test)
-            specs["Y_test"] = str(Y_test)
-            json.dump(specs, open(f"{directory}/{specs_file}", "w"))
-        else:
-            print(f"{specs_file} already contains a testing set! The new instructions are ignored. The old set is kept")
+    if directoryds is None:
+        print("Generating new test dataset")
+        for specs_file in specs_file_list:
+            specs = json.load(open(f"{directory}/{specs_file}"))
+            if ("X_test" not in specs) or (regenerate == 'true'):
+                snr = float(specs["snr"])
+                D = int(specs["D"])
+                X_test, Y_test = create_gaussian_mixtures(D, snr, n_test_samples)
+                specs["n_test_samples"] = n_test_samples
+                specs["X_test"] = str(X_test)
+                specs["Y_test"] = str(Y_test)
+                json.dump(specs, open(f"{directory}/{specs_file}", "w"))
+            else:
+                print(f"{specs_file} already contains a testing set! The new instructions are ignored. The old set is kept")
+    else:
+        print(f"Keeping the old dataset file as the one in {directoryds}/specs_1.json[['X_test', 'Y_test']]")
+        old_specs = json.load(open(f"{directoryds}/specs_1.json"))
+        for specs_file in specs_file_list:
+            specs = json.load(open(f"{directory}/{specs_file}"))
+            if ("X_test" not in specs) or (regenerate == 'true'):
+                specs["n_test_samples"] = old_specs["n_test_samples"]
+                specs["X_test"] = old_specs["X_test"]
+                specs["Y_test"] = old_specs["Y_test"]
+                json.dump(specs, open(f"{directory}/{specs_file}", "w"))
+            else:
+                print(f"{specs_file} already contains a testing set! The new instructions are ignored. The old set is kept")
 
     if skipto is not None:
         print(f"--skipto {skipto} option detected")
@@ -951,15 +965,16 @@ def analyze(directory):
 @click.option('--directory', type=click.Path(exists=True))
 @click.option('--regenerate', default='false', type=click.Choice(['true', 'false']), required=False)
 @click.option('--m', default=16, type=int, required=False)
+@click.option('--directoryds', type=click.Path(exists=True), required=False)
 @click.option('--skipto', type=int, required=False)
-def test(directory, regenerate, m, skipto):
+def test(directory, regenerate, m, directoryds, skipto):
     """
     Run the test over the already trained QNN
     :param directory: where the experiment data is saved
     :param m: number of test samples
     :return: nothing, everything is saved to file
     """
-    run_test(directory, regenerate, m, skipto)
+    run_test(directory, regenerate, m, directoryds, skipto)
 
 
 @main.command()
