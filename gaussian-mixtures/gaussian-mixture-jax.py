@@ -169,11 +169,18 @@ def run_qnn(X, Y, loss, layers, epochs):
     return specs, df, ntk_grams, ntk_gram_indexes, pk_gram
 
 
-def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, skipto=None):
+def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, skipto=None, resume=None):
 
-    if directory_dataset is None:
+    if directory_dataset is None and resume is None:
         print("Generating new training set")
         X, Y = create_gaussian_mixtures(D, snr, N)
+    elif resume is not None:
+        print("Resuming computation")
+        preex_specs = json.load(open(f"{resume}/specs_1.json"))
+        D_, snr_, N_ = int(preex_specs['D']), float(preex_specs['snr']), int(preex_specs['N'])
+        assert D == D_ and snr == snr_ and N == N_, \
+            f"Existing directory do not match specifications (D={D}!={D_} snr={snr}!={snr_} N={N}!={N_})"
+        X, Y = s2np(preex_specs['X']), s2np(preex_specs['Y'])
     else:
         print("Loading existing training set")
         preex_specs = json.load(open(f"{directory_dataset}/specs_1.json"))
@@ -182,7 +189,10 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, sk
             f"Existing directory do not match specifications (D={D}!={D_} snr={snr}!={snr_} N={N}!={N_})"
         X, Y = s2np(preex_specs['X']), s2np(preex_specs['Y'])
 
-    directory = f"experiment_snr{snr:0.2f}_d{D}_l{loss}_{datetime.now().strftime('%Y%m%d%H%M')}"
+    if resume is not None:
+        directory = resume
+    else:
+        directory = f"experiment_snr{snr:0.2f}_d{D}_l{loss}_{datetime.now().strftime('%Y%m%d%H%M')}"
     Path(directory).mkdir(parents=True, exist_ok=True)
 
     if skipto is not None:
@@ -193,6 +203,9 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, sk
     for layers in range(1, MAX_LAYERS+1):
         if skipto is not None and layers < skipto:
             print(f"QNN with {layers} layers skipped due to --skipto {skipto} option")
+            continue
+        if resume is not None and os.path.exists(f"{directory}/pk_gram_{layers}.npy"):
+            print(f"QNN with {layers} layers was already executed, I'm going to skip it")
             continue
 
         specs, df, ntk_grams, ntk_gram_indexes, pk_gram = run_qnn(X, Y, loss, layers=layers, epochs=MAX_EPOCHS)
@@ -943,7 +956,8 @@ def main():
 @click.option('--epochs', default=1000, type=int)
 @click.option('--directoryds', type=click.Path(exists=True), required=False)
 @click.option('--skipto', type=int, required=False)
-def experiment(d, snr, n, loss, layers, epochs, directoryds, skipto):
+@click.option('--resume', type=click.Path(exists=True), required=False)
+def experiment(d, snr, n, loss, layers, epochs, directoryds, skipto, resume):
     """
     Start the experiments
     :param d: dimensionality of the data (at least 2
@@ -955,7 +969,7 @@ def experiment(d, snr, n, loss, layers, epochs, directoryds, skipto):
     :return: nothing, everything is saved to file
     """
     print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
-    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs, directory_dataset=directoryds, skipto=skipto)
+    run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs, directory_dataset=directoryds, skipto=skipto, resume=resume)
 
 
 @main.command()
