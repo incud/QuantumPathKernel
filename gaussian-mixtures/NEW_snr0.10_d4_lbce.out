@@ -1,0 +1,77 @@
+Welcome
+Keeping the old dataset file as the one in experiment_snr0.10_d4_lbce_202203261440/specs_1.json[['X_test', 'Y_test']]
+specs_3.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_12.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_13.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_14.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_15.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_16.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_17.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_18.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_19.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_2.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_20.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_4.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_5.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_6.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_7.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_8.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_9.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_1.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_10.json already contains a testing set! The new instructions are ignored. The old set is kept
+specs_11.json already contains a testing set! The new instructions are ignored. The old set is kept
+
+
+14/04/2022 10:10:44 - Testing wrt file specs_3.json
+QNN with 3 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 10:10:44 - Loss (bce) for variational model: 0.95341325
+14/04/2022 10:10:46 - Start NTK PK calculation
+14/04/2022 10:13:29 - End
+
+
+14/04/2022 10:13:29 - Testing wrt file specs_12.json
+QNN with 12 layers SKIPPED due to --skip ('1', '10', '11', '12', '13') option
+
+
+14/04/2022 10:13:29 - Testing wrt file specs_13.json
+QNN with 13 layers SKIPPED due to --skip ('1', '10', '11', '12', '13') option
+
+
+14/04/2022 10:13:29 - Testing wrt file specs_14.json
+QNN with 14 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 10:13:29 - Loss (bce) for variational model: 0.8566736
+14/04/2022 10:13:33 - Start NTK PK calculation
+14/04/2022 10:45:05 - End
+
+
+14/04/2022 10:45:05 - Testing wrt file specs_15.json
+QNN with 15 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 10:45:05 - Loss (bce) for variational model: 0.8563739
+14/04/2022 10:45:14 - Start NTK PK calculation
+14/04/2022 11:32:12 - End
+
+
+14/04/2022 11:32:12 - Testing wrt file specs_16.json
+QNN with 16 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 11:32:12 - Loss (bce) for variational model: 0.85637206
+14/04/2022 11:32:21 - Start NTK PK calculation
+14/04/2022 12:12:24 - End
+
+
+14/04/2022 12:12:24 - Testing wrt file specs_17.json
+QNN with 17 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 12:12:24 - Loss (bce) for variational model: 0.85637236
+14/04/2022 12:12:32 - Start NTK PK calculation
+14/04/2022 12:50:23 - End
+
+
+14/04/2022 12:50:23 - Testing wrt file specs_18.json
+QNN with 18 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 12:50:23 - Loss (bce) for variational model: 0.85637295
+14/04/2022 12:50:28 - Start NTK PK calculation
+14/04/2022 13:38:21 - End
+
+
+14/04/2022 13:38:21 - Testing wrt file specs_19.json
+QNN with 19 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 13:38:21 - Loss (bce) for variational model: 0.8563712
