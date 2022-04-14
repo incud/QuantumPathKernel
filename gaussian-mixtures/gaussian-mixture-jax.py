@@ -284,9 +284,12 @@ def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=Non
         if skipto is not None and layers < skipto:
             print(f"QNN with {layers} layers skipped due to --skipto {skipto} option")
             continue
-        if skip is not None and layers in skip:
-            print(f"QNN with {layers} layers skipped due to --skip {skip} option")
-            continue
+        if skip is not None:
+            if str(layers) in skip:
+                print(f"QNN with {layers} layers SKIPPED due to --skip {skip} option")
+                continue
+            else:
+                print(f"QNN with {layers} layers is RUNNED since it is not present in --skip {skip} option")
 
         # load qnn and calculate cost of predicting w/ variational models
         print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Loss ({loss}) for variational model: ", end="", flush=True)
