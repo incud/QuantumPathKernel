@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from datetime import datetime
 import re
+import os
 import jax
 import jax.numpy as jnp
 import optax
@@ -210,7 +211,7 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, sk
         np.save(f"{directory}/pk_gram_{layers}.npy", pk_gram)
 
 
-def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=None):
+def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=None, skip=None):
     specs_file_list = [x.name for x in Path(directory).iterdir() if x.is_file() and x.name.startswith("specs_")]
 
     # create all specifications first (can handle partially executed tests)
@@ -246,7 +247,11 @@ def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=Non
         assert skipto >= 1, "--skipto must be greater than one"
 
     # run test for all files
-    testing_losses_per_layer = {}
+    TESTING_LOSS_FILE_PATH = f"{directory}/testing_losses_per_layer.json"
+    if os.path.exists(TESTING_LOSS_FILE_PATH):
+        testing_losses_per_layer = json.load(open(TESTING_LOSS_FILE_PATH))
+    else:
+        testing_losses_per_layer = {}
 
     for specs_file in specs_file_list:
         print("\n")
@@ -266,6 +271,9 @@ def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=Non
         if skipto is not None and layers < skipto:
             print(f"QNN with {layers} layers skipped due to --skipto {skipto} option")
             continue
+        if skip is not None and layers in skip:
+            print(f"QNN with {layers} layers skipped due to --skip {skip} option")
+            continue
 
         # load qnn and calculate cost of predicting w/ variational models
         print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Loss ({loss}) for variational model: ", end="", flush=True)
@@ -284,7 +292,7 @@ def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=Non
         np.save(f"{directory}/ntk_test_grams_{layers}.npy", ntk_test_grams)
         np.save(f"{directory}/ntk_test_gram_indexes_{layers}.npy", ntk_test_gram_indexes)
         np.save(f"{directory}/pk_test_gram_{layers}.npy", pk_test_gram)
-        json.dump(testing_losses_per_layer, open(f"{directory}/testing_losses_per_layer.json", "w"))
+        json.dump(testing_losses_per_layer, open(TESTING_LOSS_FILE_PATH, "w"))
         print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - End")
 
 # ========================================================================================
@@ -967,14 +975,15 @@ def analyze(directory):
 @click.option('--m', default=16, type=int, required=False)
 @click.option('--directoryds', type=click.Path(exists=True), required=False)
 @click.option('--skipto', type=int, required=False)
-def test(directory, regenerate, m, directoryds, skipto):
+@click.option('--skip', required=False, multiple=True)
+def test(directory, regenerate, m, directoryds, skipto, skip):
     """
     Run the test over the already trained QNN
     :param directory: where the experiment data is saved
     :param m: number of test samples
     :return: nothing, everything is saved to file
     """
-    run_test(directory, regenerate, m, directoryds, skipto)
+    run_test(directory, regenerate, m, directoryds, skipto, skip)
 
 
 @main.command()
