@@ -1,0 +1,122 @@
+Welcome
+Keeping the old dataset file as the one in experiment_snr1.00_d4_lbce_202203261741/specs_1.json[['X_test', 'Y_test']]
+
+
+13/04/2022 17:07:51 - Testing wrt file specs_1.json
+13/04/2022 17:07:51 - Loss (bce) for variational model: 1.5929408
+13/04/2022 17:07:53 - Start NTK PK calculation
+13/04/2022 17:08:56 - End
+
+
+13/04/2022 17:08:56 - Testing wrt file specs_2.json
+13/04/2022 17:08:56 - Loss (bce) for variational model: 1.2273027
+13/04/2022 17:08:57 - Start NTK PK calculation
+13/04/2022 17:14:16 - End
+
+
+13/04/2022 17:14:16 - Testing wrt file specs_3.json
+13/04/2022 17:14:16 - Loss (bce) for variational model: 1.1956841
+13/04/2022 17:14:17 - Start NTK PK calculation
+13/04/2022 17:20:00 - End
+
+
+13/04/2022 17:20:00 - Testing wrt file specs_4.json
+13/04/2022 17:20:00 - Loss (bce) for variational model: 1.1943036
+13/04/2022 17:20:01 - Start NTK PK calculation
+13/04/2022 17:27:05 - End
+
+
+13/04/2022 17:27:05 - Testing wrt file specs_5.json
+13/04/2022 17:27:05 - Loss (bce) for variational model: 1.1942174
+13/04/2022 17:27:06 - Start NTK PK calculation
+13/04/2022 17:35:40 - End
+
+
+13/04/2022 17:35:40 - Testing wrt file specs_6.json
+13/04/2022 17:35:40 - Loss (bce) for variational model: 1.1947932
+13/04/2022 17:35:42 - Start NTK PK calculation
+13/04/2022 17:44:56 - End
+
+
+13/04/2022 17:44:56 - Testing wrt file specs_7.json
+13/04/2022 17:44:56 - Loss (bce) for variational model: 1.2013764
+13/04/2022 17:44:58 - Start NTK PK calculation
+13/04/2022 17:57:52 - End
+
+
+13/04/2022 17:57:52 - Testing wrt file specs_8.json
+13/04/2022 17:57:52 - Loss (bce) for variational model: 1.2000233
+13/04/2022 17:57:54 - Start NTK PK calculation
+13/04/2022 18:10:06 - End
+
+
+13/04/2022 18:10:06 - Testing wrt file specs_9.json
+13/04/2022 18:10:06 - Loss (bce) for variational model: 1.2013716
+13/04/2022 18:10:08 - Start NTK PK calculation
+13/04/2022 18:20:35 - End
+
+
+13/04/2022 18:20:35 - Testing wrt file specs_10.json
+13/04/2022 18:20:35 - Loss (bce) for variational model: 1.2014233
+13/04/2022 18:20:37 - Start NTK PK calculation
+13/04/2022 18:37:15 - End
+
+
+13/04/2022 18:37:15 - Testing wrt file specs_11.json
+13/04/2022 18:37:15 - Loss (bce) for variational model: 1.2013758
+13/04/2022 18:37:18 - Start NTK PK calculation
+13/04/2022 18:54:01 - End
+
+
+13/04/2022 18:54:01 - Testing wrt file specs_12.json
+13/04/2022 18:54:01 - Loss (bce) for variational model: 1.2013773
+13/04/2022 18:54:04 - Start NTK PK calculation
+13/04/2022 19:07:24 - End
+
+
+13/04/2022 19:07:24 - Testing wrt file specs_13.json
+13/04/2022 19:07:24 - Loss (bce) for variational model: 1.2013767
+13/04/2022 19:07:28 - Start NTK PK calculation
+13/04/2022 19:23:01 - End
+
+
+13/04/2022 19:23:01 - Testing wrt file specs_14.json
+13/04/2022 19:23:01 - Loss (bce) for variational model: 1.2013766
+13/04/2022 19:23:04 - Start NTK PK calculation
+13/04/2022 19:39:47 - End
+
+
+13/04/2022 19:39:47 - Testing wrt file specs_15.json
+13/04/2022 19:39:47 - Loss (bce) for variational model: 1.2023548
+13/04/2022 19:39:51 - Start NTK PK calculation
+13/04/2022 19:56:51 - End
+
+
+13/04/2022 19:56:51 - Testing wrt file specs_16.json
+13/04/2022 19:56:51 - Loss (bce) for variational model: 1.196545
+13/04/2022 19:56:55 - Start NTK PK calculation
+13/04/2022 20:16:33 - End
+
+
+13/04/2022 20:16:33 - Testing wrt file specs_17.json
+13/04/2022 20:16:33 - Loss (bce) for variational model: 1.2004362
+13/04/2022 20:16:37 - Start NTK PK calculation
+13/04/2022 20:42:07 - End
+
+
+13/04/2022 20:42:07 - Testing wrt file specs_18.json
+13/04/2022 20:42:07 - Loss (bce) for variational model: 1.2000438
+13/04/2022 20:42:11 - Start NTK PK calculation
+13/04/2022 21:03:06 - End
+
+
+13/04/2022 21:03:06 - Testing wrt file specs_19.json
+13/04/2022 21:03:06 - Loss (bce) for variational model: 1.2013714
+13/04/2022 21:03:11 - Start NTK PK calculation
+13/04/2022 21:27:12 - End
+
+
+13/04/2022 21:27:12 - Testing wrt file specs_20.json
+13/04/2022 21:27:12 - Loss (bce) for variational model: 1.2013028
+13/04/2022 21:27:17 - Start NTK PK calculation
+13/04/2022 21:56:01 - End
