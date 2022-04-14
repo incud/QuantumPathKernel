@@ -75,3 +75,73 @@ QNN with 18 layers is RUNNED since it is not present in --skip ('1', '10', '11',
 14/04/2022 13:38:21 - Testing wrt file specs_19.json
 QNN with 19 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
 14/04/2022 13:38:21 - Loss (bce) for variational model: 0.8563712
+14/04/2022 13:38:26 - Start NTK PK calculation
+14/04/2022 14:11:45 - End
+
+
+14/04/2022 14:11:45 - Testing wrt file specs_2.json
+QNN with 2 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 14:11:45 - Loss (bce) for variational model: 0.8810502
+14/04/2022 14:11:46 - Start NTK PK calculation
+14/04/2022 14:16:26 - End
+
+
+14/04/2022 14:16:26 - Testing wrt file specs_20.json
+QNN with 20 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 14:16:26 - Loss (bce) for variational model: 0.8563724
+14/04/2022 14:16:31 - Start NTK PK calculation
+14/04/2022 14:50:26 - End
+
+
+14/04/2022 14:50:26 - Testing wrt file specs_4.json
+QNN with 4 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 14:50:26 - Loss (bce) for variational model: 0.86313903
+14/04/2022 14:50:27 - Start NTK PK calculation
+14/04/2022 14:57:46 - End
+
+
+14/04/2022 14:57:46 - Testing wrt file specs_5.json
+QNN with 5 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 14:57:46 - Loss (bce) for variational model: 0.86093634
+14/04/2022 14:57:47 - Start NTK PK calculation
+14/04/2022 15:10:07 - End
+
+
+14/04/2022 15:10:07 - Testing wrt file specs_6.json
+QNN with 6 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 15:10:07 - Loss (bce) for variational model: 0.8608966
+14/04/2022 15:10:09 - Start NTK PK calculation
+14/04/2022 15:21:19 - End
+
+
+14/04/2022 15:21:19 - Testing wrt file specs_7.json
+QNN with 7 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 15:21:19 - Loss (bce) for variational model: 0.8563722
+14/04/2022 15:21:20 - Start NTK PK calculation
+14/04/2022 15:36:09 - End
+
+
+14/04/2022 15:36:09 - Testing wrt file specs_8.json
+QNN with 8 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 15:36:09 - Loss (bce) for variational model: 0.85837674
+14/04/2022 15:36:11 - Start NTK PK calculation
+14/04/2022 15:53:28 - End
+
+
+14/04/2022 15:53:28 - Testing wrt file specs_9.json
+QNN with 9 layers is RUNNED since it is not present in --skip ('1', '10', '11', '12', '13') option
+14/04/2022 15:53:28 - Loss (bce) for variational model: 0.85638475
+14/04/2022 15:53:30 - Start NTK PK calculation
+14/04/2022 16:07:37 - End
+
+
+14/04/2022 16:07:37 - Testing wrt file specs_1.json
+QNN with 1 layers SKIPPED due to --skip ('1', '10', '11', '12', '13') option
+
+
+14/04/2022 16:07:37 - Testing wrt file specs_10.json
+QNN with 10 layers SKIPPED due to --skip ('1', '10', '11', '12', '13') option
+
+
+14/04/2022 16:07:37 - Testing wrt file specs_11.json
+QNN with 11 layers SKIPPED due to --skip ('1', '10', '11', '12', '13') option
