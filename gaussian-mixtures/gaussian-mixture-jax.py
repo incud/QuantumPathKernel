@@ -733,6 +733,59 @@ def run_analysis(directory):
     plt.clf()
 
 
+def run_generalizationplots(directories, output_name):
+
+    MAX_LAYERS = 20
+    D, snr, N, loss = 0, 0, 0, ""
+
+    x, Y_ntk, Y_pk, Y_oracle = None, [], [], []
+
+    for directory in directories:
+
+        # load X, Y data
+        X_list, Y_list, X_test_list, Y_test_list = [], [], [], []
+        for i in range(1, MAX_LAYERS + 1):
+            # load specifications
+            specs_ = json.load(open(f"{directory}/specs_{i}.json"))
+            D, snr, N, loss = int(specs_["D"]), float(specs_["snr"]), int(specs_["N"]), specs_["loss"]
+            X_list.append(s2np(specs_["X"]))
+            Y_list.append(s2np(specs_["Y"]))
+            X_test_list.append(s2np(specs_["X_test"]))
+            Y_test_list.append(s2np(specs_["Y_test"]))
+
+        ntk_grams_list = [np.load(f"{directory}/ntk_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+        pk_grams = [np.load(f"{directory}/pk_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+        ntk_test_grams_list = [np.load(f"{directory}/ntk_test_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+        pk_test_grams = [np.load(f"{directory}/pk_test_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
+
+        x = [i + 1 for i in range(MAX_LAYERS)]
+        y_ntk = [calculate_svc_accuracy(ntk_grams_list[i][-1], ntk_test_grams_list[i][-1], Y_list[i], Y_test_list[i]) for i in range(MAX_LAYERS)]
+        y_pk = [calculate_svc_accuracy(pk_grams[i], pk_test_grams[i], Y_list[i], Y_test_list[i]) for i in range(MAX_LAYERS)]
+        y_oracle = [calculate_oracle_accuracy(X_test_list[i], Y_test_list[i]) for i in range(MAX_LAYERS)]
+        Y_ntk.append(y_ntk)
+        Y_pk.append(y_pk)
+        Y_oracle.append(y_oracle)
+
+    plt.figure(figsize=(5, 5))
+    plt.scatter(x, np.average(Y_ntk, axis=0), label=f"NTK", color='red')
+    plt.errorbar(x, np.average(Y_ntk, axis=0), yerr=np.std(Y_ntk, axis=0), linestyle="None", color='red')
+    plt.scatter(x, np.average(Y_pk, axis=0), label=f"PK", color='blue')
+    plt.errorbar(x, np.average(Y_pk, axis=0), yerr=np.std(Y_pk, axis=0), linestyle="None", color='blue')
+    plt.scatter(x, np.average(Y_oracle, axis=0), label=f"Oracle", color='green')
+    plt.errorbar(x, np.average(Y_oracle, axis=0), yerr=np.std(Y_oracle, axis=0), linestyle="None", color='green')
+    plt.xlabel("Depth")
+    plt.ylabel(r"Accuracy")
+    plt.ylim((0, 1))
+    plt.legend(bbox_to_anchor=(1, 1), prop={'size': 6})
+    plt.tight_layout()
+    plt.title(f"SVM generalization error (D={D}; snr={snr}; loss={loss})")
+    plt.savefig(f"{output_name}.png", dpi=300, format='png')
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+
+
 def run_report(refreshplots):
     """
     Generate report in html format
@@ -1012,6 +1065,16 @@ def report(refreshplots):
     :return: nothing, the html il saved to report_<datetime>.html
     """
     run_report(refreshplots)
+
+
+@main.command()
+@click.option('--directory', type=click.Path(exists=True), multiple=True)
+@click.option('--output', type=click.Path(exists=False), required=True)
+def generalizationplot(directory, output):
+    """
+    Create the generalization error plots
+    """
+    run_generalizationplots(directory, output)
 
 
 if __name__ == '__main__':
