@@ -10,17 +10,18 @@ This is the official implementation of [The Quantum Path Kernel](https://arxiv.o
 
 ![Workflow](quantum_path_kernel_workflow.png)
 
+The workflow that is used to evaluate the perfomances of the Quantum Path Kernel with respect
+to the Quantum NTK is explained in details within the linked article. 
+
 The only executable is ```quantum-path-kernel.py```, which is run with different
 commands to generate the (training and testing) datasets, train and evaluate 
-the models and generate the plots. The list of commands can be shown with
+the models and generate the plots. The list of commands can be shown with:
 
     python3 quantum-path-kernel.py --help
 
-while the detailed usage of each command can be shown with
+while the detailed usage of each command can be shown with:
 
     python3 quantum-path-kernel.py <command> --help
-
-The documentation for our code can be found in file TODO.
 
 ## Requirements
 

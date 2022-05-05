@@ -45,6 +45,12 @@ def create_gaussian_mixtures(D, noise, N):
 
 
 def create_qnn(N, layers):
+    """
+    Create a quantum neural network having N qubits and the given number of layers
+    :param N: # of qubits
+    :param layers: # of layers
+    :return: the function representing the quantum neural network
+    """
     device = qml.device("default.qubit.jax", wires=N)
 
     @jax.jit
@@ -66,6 +72,15 @@ def create_qnn(N, layers):
 
 
 def calculate_mse_cost(X, Y, qnn, params, N):
+    """
+    Calculate Mean Square Error
+    :param X: vector of data points
+    :param Y: vector of labels
+    :param qnn: quantum neural network function
+    :param params: actual parameters of the QNN model
+    :param N: number of elements in X and Y
+    :return: the MSE cost
+    """
     the_cost = 0.0
     for i in range(N):
         x, y = X[i], Y[i]
@@ -75,6 +90,15 @@ def calculate_mse_cost(X, Y, qnn, params, N):
 
 
 def calculate_bce_cost(X, Y, qnn, params, N):
+    """
+    Calculate Binary Cross-Entropy
+    :param X: vector of data points
+    :param Y: vector of labels
+    :param qnn: quantum neural network function
+    :param params: actual parameters of the QNN model
+    :param N: number of elements in X and Y
+    :return: the BCE cost
+    """
     the_cost = 0.0
     epsilon = 1e-6
     for i in range(N):
@@ -86,6 +110,17 @@ def calculate_bce_cost(X, Y, qnn, params, N):
 
 
 def train_qnn(X, Y, qnn, loss, n_params, epochs):
+    """
+    Train the given QNN on the training dataset
+    :param X: training dataset points
+    :param Y: training dataset labels
+    :param qnn: quantum neural network function
+    :param loss: loss function (either 'mse' or 'bce')
+    :param n_params: number of parameters of the quantum neural network function
+    :param epochs: number of training epochs
+    :return: the specification file for the training (to be merged with other informations) and the trace of the
+    training as a Pandas DataFrame
+    """
     N, _ = X.shape
     seed = int(datetime.now().strftime('%Y%m%d%H%M%S'))
     rng = jax.random.PRNGKey(seed)
@@ -127,7 +162,13 @@ def train_qnn(X, Y, qnn, loss, n_params, epochs):
 
 
 def kernel_matrix_feature_map(feature_map, X1, X2=None):
-
+    """
+    Calculate the gram matrix given the feature map
+    :param feature_map: feature map function
+    :param X1: training data
+    :param X2: optional testing data, if None we are constructing the training Gram matrix, otherwise the testing one
+    :return: Gram matrix
+    """
     Phi_1 = [feature_map(x) for x in X1]
     Phi_2 = [feature_map(x) for x in X2] if X2 is not None else Phi_1
     N = len(Phi_1)
@@ -142,7 +183,14 @@ def kernel_matrix_feature_map(feature_map, X1, X2=None):
 
 
 def calculate_ntk(X, qnn, df, X_test=None):
-
+    """
+    Calculates the NTK matrix (performance improvement: without kernel trick)
+    :param X: training data
+    :param qnn: quantum neural network function
+    :param df: trace of training
+    :param X_test: testing data
+    :return: list of Gram matrices ad different points of the training, and list of epochs at which the Gram matrices were generated
+    """
     qnn_grad = jax.grad(qnn, argnums=(1,))
 
     def ntk(x1, x2, params):
@@ -174,11 +222,24 @@ def calculate_ntk(X, qnn, df, X_test=None):
 
 
 def calculate_pk(ntk_grams):
+    """
+    Averages over many NTK Gram matrices
+    :param ntk_grams: list of NTK Gram matrices
+    :return: PK matrix
+    """
     return np.average(ntk_grams, axis=0)
 
 
 def run_qnn(X, Y, loss, layers, epochs):
+    """
 
+    :param X:
+    :param Y:
+    :param loss:
+    :param layers:
+    :param epochs:
+    :return:
+    """
     N, D = X.shape
     print(f"\n{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Creating QNN ({layers} layers)")
     qnn = create_qnn(D, layers)
@@ -193,7 +254,19 @@ def run_qnn(X, Y, loss, layers, epochs):
 
 
 def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, skipto=None, resume=None):
+    """
 
+    :param D:
+    :param snr:
+    :param N:
+    :param loss:
+    :param MAX_LAYERS:
+    :param MAX_EPOCHS:
+    :param directory_dataset:
+    :param skipto:
+    :param resume:
+    :return:
+    """
     if directory_dataset is None and resume is None:
         print("Generating new training set")
         X, Y = create_gaussian_mixtures(D, snr, N)
@@ -248,6 +321,16 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, sk
 
 
 def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=None, skip=None):
+    """
+
+    :param directory:
+    :param regenerate:
+    :param n_test_samples:
+    :param directoryds:
+    :param skipto:
+    :param skip:
+    :return:
+    """
     specs_file_list = [x.name for x in Path(directory).iterdir() if x.is_file() and x.name.startswith("specs_")]
 
     # create all specifications first (can handle partially executed tests)
@@ -588,9 +671,16 @@ def plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_grams,
                             X_test_list, Y_test_list, ntk_test_grams_list, pk_test_grams,
                             is_test=False):
     """
-    Plot the target kernel alignment per epoch
-    X = epochs; Y = loss
-    :param traces:
+
+    :param X_list:
+    :param Y_list:
+    :param ntk_grams_list:
+    :param pk_grams:
+    :param X_test_list:
+    :param Y_test_list:
+    :param ntk_test_grams_list:
+    :param pk_test_grams:
+    :param is_test:
     :return:
     """
     N = len(ntk_grams_list)
@@ -626,7 +716,7 @@ def run_analysis(directory):
     """
     Analyze the data contained in the given directory
     :param directory: where the experiment data is saved
-    :return: nothing, everything is saved to file
+    :return: None, everything is saved to file
     """
     # create analysis directory and load specifications
     subdirectory = directory + "/analysis"
@@ -757,6 +847,12 @@ def run_analysis(directory):
 
 
 def run_generalizationplots(directories, output_name):
+    """
+    Create the generalization error plot and save the corresponding image
+    :param directories: list of directories containing the identically specified experiments
+    :param output_name: filename of the output image
+    :return: None, but saves the file at the given path
+    """
 
     MAX_LAYERS = 20
     D, snr, N, loss = 0, 0, 0, ""
@@ -790,12 +886,15 @@ def run_generalizationplots(directories, output_name):
         Y_oracle.append(y_oracle)
 
     plt.figure(figsize=(5, 5))
-    plt.scatter(x, np.average(Y_ntk, axis=0), label=f"NTK", color='red')
-    plt.errorbar(x, np.average(Y_ntk, axis=0), yerr=np.std(Y_ntk, axis=0), linestyle="None", color='red')
-    plt.scatter(x, np.average(Y_pk, axis=0), label=f"PK", color='blue')
-    plt.errorbar(x, np.average(Y_pk, axis=0), yerr=np.std(Y_pk, axis=0), linestyle="None", color='blue')
-    plt.scatter(x, np.average(Y_oracle, axis=0), label=f"Oracle", color='green')
-    plt.errorbar(x, np.average(Y_oracle, axis=0), yerr=np.std(Y_oracle, axis=0), linestyle="None", color='green')
+    y_ntk_avg = np.average(Y_ntk, axis=0)
+    y_pk_avg = np.average(Y_pk, axis=0)
+    y_oracle_avg = np.average(Y_oracle, axis=0)
+    plt.scatter(x, y_ntk_avg, label=f"NTK", color='red')
+    plt.errorbar(x, y_ntk_avg, yerr=np.std(Y_ntk, axis=0), linestyle="None", color='red')
+    plt.scatter(x, y_pk_avg, label=f"PK", color='blue')
+    plt.errorbar(x, y_pk_avg, yerr=np.std(Y_pk, axis=0), linestyle="None", color='blue')
+    plt.scatter(x, y_oracle_avg, label=f"Oracle", color='green')
+    plt.errorbar(x, y_oracle_avg, yerr=np.std(Y_oracle, axis=0), linestyle="None", color='green')
     plt.xlabel("Depth")
     plt.ylabel(r"Accuracy")
     plt.ylim((0, 1))
@@ -806,16 +905,19 @@ def run_generalizationplots(directories, output_name):
     plt.close()
     plt.cla()
     plt.clf()
-    print("NTK: ", np.average(Y_ntk, axis=0))
-    print("PK: ", np.average(Y_pk, axis=0))
-    print("ORACLE: ", np.average(Y_oracle, axis=0))
+
+    # print markdown table
+    # print("| Model           | Accuracy SVM + QNTK | Accuracy SVM + QPK | Accuracy oracle |")
+    # print("|-----------------|---------------------|--------------------|-----------------|")
+    # for i in range(len(x)):
+    #     print(f"| QNN ({i+1} layers) | {y_ntk_avg[i]:4.2f} | {y_pk_avg[i]:4.2f} | {y_oracle_avg[i]:4.2f} | ")
 
 
 
 def run_report(refreshplots):
     """
     Generate report in html format
-    :param refreshplots: if true, the plots are generated again
+    :param refreshplots: if true, the plots are generated again (may take some time)
     :return: nothing, the html il saved to report_<datetime>.html
     """
 
@@ -834,153 +936,9 @@ def run_report(refreshplots):
     experiments_specs = [{'snr': r.group(1), 'd': r.group(2), 'loss': r.group(3), 'dir': dir} for (r, dir) in experiments_specs]
 
     # utilities for report generation
-    filtered_specs = lambda key, value: [spec for spec in experiments_specs if spec[key] == value]
-    multi_filtered_specs = lambda assignments: [spec for spec in experiments_specs if all(spec[k] == v for k, v in assignments)]
     title = "Gaussian Mixtures with Quantum Machine Learning models and Path Kernel"
     gen_time = datetime.now()
 
-    # report
-#     rprt = f"""
-# <html>
-#     <head>
-#         <title>{title}</title>
-#         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-#         <style>img{{max-width: 600px}}</style>
-#     </head>
-#     <body class="container">
-#         <h1>{title}</h1>
-#         <p>Generated at {gen_time.strftime('%d/%m/%Y %H:%M:%S')}</p>
-#         <h2>Dataset</h2>
-#         <p>The dataset is composed of N samples. Each sample has D components in the form (x1, x2, 0, 0, ..., 0)
-#         where x1 and x2 are the coordinated of one of the four centroids (+-.5, +-.5) plus some noise that I've called
-#         snr (signal to noise) but I'm not sure it matches the definition... Is just noise independently sampled from
-#         a gaussian having mean zero and variance equal to the 'snr'. The higher the 'snr', the more noisy my dataset
-#         is and the more difficult is to classify the samples.
-#         In Refinetti's work, having large value to D results in a difficult environment for random feature kernel models
-#         while Neural Networks, due to their dissipative work, can easily learn the distribution reaching the optimal
-#         performance of the oracle. </p>
-#         {"".join(f"<p>Dataset generated with snr={spec['snr']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/dataset_plot.png'/></p>{chr(10)}"
-#                  for spec in experiments_specs)}
-#         <br/>
-#         <h2>QNN</h2>
-#         <p>The Quantum Neural Network's variational for is, for each layer: a ZZ rotation each couple of adjacent qubits (in a
-#         circular fashion) parameterized with a single, shared parameter, and a X rotation each qubit parameterized with a single,
-#         shared parameter. For L layers, there are 2L parameters. <br/> This form has the advantange that it's
-#         experimentally proven by LaRocca-Cerezo's work that does not show barren plateau. </p>
-#         <h2>Loss</h2>
-#         <p>The loss is the function minimized during the training phase by the optimizer. In classical deep learning
-#         theory, I should reach zero loss when I have just enough parameters to perfectly fit the data, resulting in
-#         a large generalization error. Due to double descent and the implic regularization of gradient descent
-#         optimization, adding further parameters still find a solution having zero loss which although represent a
-#         simpler function, with better generalization performances.<p>
-#         <p>The loss function we can study is either the Binary Cross Entropy, which is used for classification
-#         problems such this one, and the Mean Square Error, which is used in regression problems usually but it still
-#         make sense to make the comparison.</p>
-#         <h4>Loss per epoch</h4>
-#         <p>The following paragram study the loss of each model with respect to the epoch of training (x axis). The
-#         color of the line represents how many layer the QNN has.</p>
-#         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'bce'))}
-#         <h6>Using loss MSE (Mean Square Error)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_epoch.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'mse'))}
-#         <br/>
-#         <h4>Loss per depth</h4>
-#         <p>The following paragram study the loss of each model with respect to the depth (x axis). The point on each
-#         vertical line represents the evolution of the loss at a certain depth, during the training each epoch multiple
-#         of 100. The fact that the points are not evenly spread from the top to the bottom means that the loss
-#         immediately reach zero (well, in 100 epoch at least).</p>
-#         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'bce'))}
-#         <h6>Using loss MSE (Mean Square Error)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/loss_in_training_per_depth.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'mse'))}
-#         <br/>
-#         <h2>Parameters norm change</h2>
-#         <p>Parameters norm change highlight the lazy training phenomena: if the parameters stay close to their
-#         initialization then we are in a lazy training regime (a sort of, since our QNN are indeed linear model,
-#         can be really call them feature learning vs lazy regimes? isn't that just optimization?).
-#         <h4>Parameters norm change per epoch</h4>
-#         <p>These plots highlight the fact that after a (big or small) adjustment of the parameters, they converges
-#         quickly into a solution (n.b. note that here just the norm is checked, eventually if they are rotating they
-#         will indeed change if I can't see that from this plot... It's more a technical note though).
-#         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'bce'))}
-#         <h6>Using loss MSE (Mean Square Error)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_epoch.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'mse'))}
-#         <br/>
-#         <h4>Parameters norm change per depth</h4>
-#         <p>If the yellow-er dots stay close to the red (initial) ones then we are in lazy training. It almost never
-#         happen than the norm first increase (going far from the initialization) then decreases (returning back to the
-#         initialization).
-#         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'bce'))}
-#         <h6>Using loss MSE (Mean Square Error)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/param_norm_change_in_training_per_depth.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'mse'))}
-#         <br/>
-#         <h2>Accuracy</h2>
-#         <p>We compare the accuracy of the model in predicting the labels by comparing the NTK calculated (for each QNN)
-#         at its last configuration, at the end of the training (1000 epoch) and the Path Kernel.
-#         The red-to-yellow line and dots are related to the Neural Tangent Kernel (1000 epoch) + SVM model.
-#         The blue-to-green line and dots are related to the Path Kernel + SVM model. </p>
-#         <p>Accuracy is calculated by still using the same dataset of the training (i.e. if I use the non-linearized
-#         variational model instead of quantum kernel+SVM I will get zero error due to the zero loss). Considering a
-#         testing set after this preliminary results is mandatory.
-#         <h4>Accuracy per epoch</h4>
-#         <p>We surely expect the accuracy is higher for small snr. <b>Preliminary thoughts</b>: it seems that with
-#         small depths the NTK performs better, and with higher depths the NTK performs worse. I was expecting the
-#         opposite, since the PK at small depth allows to interpret the model as a kernel machine while the NTK at small
-#         depth (and thus larger parameters norm change) means nothing. We need to check it here something. Well, to tell
-#         the truth, it seems to me that the performances of PK are almost the average of the performance of NTK...<br/>
-#         P.S: this graph are not great. Do we know a fancier graphical representation?</p>
-#         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'bce'))}
-#         <h6>Using loss MSE (Mean Square Error)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_epoch.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'mse'))}
-#         <br/>
-#         <h4>Accuracy per depth</h4>
-#         <p>Much clearer representation... From these graphs, PK seems to win in general, especially with BCE loss!
-#         Still, we are using the same points of the training.</p>
-#         <h6>Using loss BCE (Binary Cross Entropy)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'bce'))}
-#         <h6>Using loss MSE (Mean Square Error)</h6>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}"
-#                  for spec in filtered_specs('loss', 'mse'))}
-#         <br/>
-#         <h2>By increasing D...</h2>
-#         <p>Does it happens that, like in Refinetti's work, by increasing D the kernel machine loses performances?
-#         If that happens, it might mean that the kernel are working just like random features. We still miss some further
-#         experiments to see a pattern, however:</p>
-#         <p>Take loss=BCE, snr=0.50, D in[2, 3, 4, 5]</p>
-#         {"".join(f"<p>Experiment having snr={spec['snr']}, d={spec['d']}, loss={spec['loss']}:<br/>"
-#                  f"<img src='{spec['dir']}/analysis/accuracy_in_training_per_depth.png'/></p>{chr(10)}"
-#                  for spec in multi_filtered_specs([('loss', 'bce'), ('snr', '0.50')]))}
-#         <br/><br/><br/><p>End of report</p><br/><br/><br/>
-#     </body>
-# </html>
-#     """
     rprt = f"""
 <html>
     <head>
