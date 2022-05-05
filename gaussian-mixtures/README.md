@@ -8,7 +8,7 @@ https://github.com/paperswithcode/releasing-research-code
 
 This is the official implementation of [The Quantum Path Kernel](https://arxiv.org/anonymized_for_neurips_submission). 
 
-TODO Include graphics, demo ecc. 
+![Workflow](quantum_path_kernel_workflow.png)
 
 The only executable is ```quantum-path-kernel.py```, which is run with different
 commands to generate the (training and testing) datasets, train and evaluate 
@@ -29,7 +29,7 @@ Python v3.9.11, PiP packet-manager v22.0.4 along with the other
 libraries listed in ```requirements.txt``` file in the root of 
 the attached repository. To install requirements:
 
-    pip install -r requirements.txt
+    python3 -m pip install -r requirements.txt
 
 The code has been tested on these machines:
 
@@ -161,26 +161,114 @@ format ```npy``` of NumPy arrays.
 ## Results
 
 The SVM model with the Quantum Path Kernel and Quantum NTK reaches the following 
-performances:
+performances.
 
-| Model         | # Elements | # Features | Parameters to reach interpolation threshold |
-|-----------------|------------|------------|---------------------------------------------|
-| monks-problem-2 | 601        | 7          | 4207                                        |
-| diabetes        | 768        | 9          | 6912                                        |
-| tic-tac-toe     | 958        | 10         | 9580                                        |
-| spambase        | 4601       | 58         | 266858                                      |
+Experiments having _d=4_, noise _snr = 0.1_, loss _BCE_:
+
+| Model           | Accuracy SVM + QNTK | Accuracy SVM + QPK | Accuracy oracle |
+|-----------------|---------------------|--------------------|-----------------|
+| QNN (1 layers) | 0.50 | 0.50 | 1.00 |
+| QNN (2 layers) | 0.67 | 0.50 | 1.00 |
+| QNN (3 layers) | 0.96 | 0.58 | 1.00 |
+| QNN (4 layers) | 0.83 | 0.75 | 1.00 |
+| QNN (5 layers) | 0.77 | 0.67 | 1.00 |
+| QNN (6 layers) | 0.83 | 0.71 | 1.00 |
+| QNN (7 layers) | 0.65 | 0.73 | 1.00 |
+| QNN (8 layers) | 0.73 | 0.69 | 1.00 |
+| QNN (9 layers) | 0.81 | 0.79 | 1.00 |
+| QNN (10 layers) | 0.75 | 0.77 | 1.00 |
+| QNN (11 layers) | 0.85 | 0.83 | 1.00 |
+| QNN (12 layers) | 0.81 | 0.79 | 1.00 |
+| QNN (13 layers) | 0.71 | 0.96 | 1.00 |
+| QNN (14 layers) | 0.60 | 0.83 | 1.00 |
+| QNN (15 layers) | 0.75 | 0.92 | 1.00 |
+| QNN (16 layers) | 0.73 | 0.83 | 1.00 |
+| QNN (17 layers) | 0.75 | 0.90 | 1.00 |
+| QNN (18 layers) | 0.75 | 0.92 | 1.00 |
+| QNN (19 layers) | 0.81 | 0.88 | 1.00 |
+| QNN (20 layers) | 0.67 | 0.92 | 1.00 |
+
+Experiments having _d=4_, noise _snr = 0.4_, loss _BCE_:
+
+| Model           | Accuracy SVM + QNTK | Accuracy SVM + QPK | Accuracy oracle |
+|-----------------|---------------------|--------------------|-----------------|
+| QNN (1 layers) | 0.44 | 0.40 | 1.00 |
+| QNN (2 layers) | 0.58 | 0.56 | 1.00 |
+| QNN (3 layers) | 0.56 | 0.58 | 1.00 |
+| QNN (4 layers) | 0.62 | 0.75 | 1.00 |
+| QNN (5 layers) | 0.73 | 0.71 | 1.00 |
+| QNN (6 layers) | 0.73 | 0.67 | 1.00 |
+| QNN (7 layers) | 0.71 | 0.79 | 1.00 |
+| QNN (8 layers) | 0.67 | 0.75 | 1.00 |
+| QNN (9 layers) | 0.69 | 0.71 | 1.00 |
+| QNN (10 layers) | 0.60 | 0.77 | 1.00 |
+| QNN (11 layers) | 0.67 | 0.73 | 1.00 |
+| QNN (12 layers) | 0.67 | 0.73 | 1.00 |
+| QNN (13 layers) | 0.71 | 0.73 | 1.00 |
+| QNN (14 layers) | 0.67 | 0.75 | 1.00 |
+| QNN (15 layers) | 0.65 | 0.73 | 1.00 |
+| QNN (16 layers) | 0.75 | 0.83 | 1.00 |
+| QNN (17 layers) | 0.62 | 0.75 | 1.00 |
+| QNN (18 layers) | 0.73 | 0.75 | 1.00 |
+| QNN (19 layers) | 0.67 | 0.77 | 1.00 |
+| QNN (20 layers) | 0.73 | 0.77 | 1.00 |
+
+Experiments having _d=4_, noise _snr = 1.0_, loss _BCE_:
+
+| Model           | Accuracy SVM + QNTK | Accuracy SVM + QPK | Accuracy oracle |
+|-----------------|---------------------|--------------------|-----------------|
+| QNN (1 layers) | 0.44 | 0.44 | 0.56 |
+| QNN (2 layers) | 0.38 | 0.44 | 0.56 |
+| QNN (3 layers) | 0.52 | 0.52 | 0.62 |
+| QNN (4 layers) | 0.46 | 0.54 | 0.56 |
+| QNN (5 layers) | 0.50 | 0.50 | 0.56 |
+| QNN (6 layers) | 0.48 | 0.54 | 0.56 |
+| QNN (7 layers) | 0.58 | 0.54 | 0.52 |
+| QNN (8 layers) | 0.44 | 0.52 | 0.60 |
+| QNN (9 layers) | 0.44 | 0.54 | 0.60 |
+| QNN (10 layers) | 0.52 | 0.58 | 0.60 |
+| QNN (11 layers) | 0.56 | 0.52 | 0.58 |
+| QNN (12 layers) | 0.54 | 0.56 | 0.62 |
+| QNN (13 layers) | 0.54 | 0.52 | 0.58 |
+| QNN (14 layers) | 0.54 | 0.58 | 0.54 |
+| QNN (15 layers) | 0.48 | 0.46 | 0.58 |
+| QNN (16 layers) | 0.52 | 0.52 | 0.56 |
+| QNN (17 layers) | 0.52 | 0.48 | 0.56 |
+| QNN (18 layers) | 0.54 | 0.48 | 0.58 |
+| QNN (19 layers) | 0.48 | 0.52 | 0.54 |
+| QNN (20 layers) | 0.52 | 0.52 | 0.56 |
 
 Such information is better visualized using the plots generated as shown below. 
 
 ### Plot generation
 
+To generate the plots related to a single experiment, which includes:
 
-The generalization plots have been generated using the command:
+* plot of the training dataset;
+* plot of the losses (of some or all models within the same experiment) with respect to the epochs of training;
+* plot of the norm parameters change (of some or all models within the same experiment) with respect to the epochs of training;
+* plot of the training accuracy (measures uniquely how precisely the training dataset is fitted);
+* plot of the testing accuracy.
+
+This can be done with the command:
+
+    python3 quantum-path-kernel.py analyse --directory <direxperiment>
+
+You can also generate an HTML document containing the report (recap of all experiments in the current folder) 
+using the command:
+
+    python3 quantum-path-kernel.py report [--refreshplot true|false]
+
+where you can optionally re-generate the plots for all experiments.
+
+If you need to generate the generalization error plots, which includes multiple (identical) experiments, 
+in order to estimate the error bars you can use ```generalizationplot``` command. The only input is multiple
+```--directory <direxperiment>``` options. A sanity check to confirm all experiments have identical specifications
+is performed. The plots within the paper are generated with:
 
     python3 quantum-path-kernel.py generalizationplot --directory experiment_snr0.10_d4_lbce_202203261440 --directory experiment_snr0.10_d4_lbce_202204111213 --directory experiment_snr0.10_d4_lbce_202204111418 --output generalization_plot_snr010_d4_lossbce
     python3 quantum-path-kernel.py generalizationplot --directory experiment_snr0.40_d4_lbce_202203282128 --directory experiment_snr0.40_d4_lbce_202204111419 --directory experiment_snr0.40_d4_lbce_202204122056 --output generalization_plot_snr040_d4_lossbce
     python3 quantum-path-kernel.py generalizationplot --directory experiment_snr1.00_d4_lbce_202203261741 --directory experiment_snr1.00_d4_lbce_202204120830 --directory experiment_snr1.00_d4_lbce_202204130859 --output generalization_plot_snr100_d4_lossbce
-
 
 ## Contributing
 
