@@ -1,3 +1,6 @@
+# The Quantum Path Kernel © 2022 by ANONYMIZED FOR NeurIPS'22 SUBMISSION is licensed under
+# [Attribution-NonCommercial-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -16,11 +19,11 @@ import click
 from sklearn.svm import SVC
 
 
-def create_gaussian_mixtures(D, snr, N):
+def create_gaussian_mixtures(D, noise, N):
     """
     Create the Gaussian mixture dataset
     :param D: number of dimensions: (x1, x2, 0, .., 0) in R^D
-    :param snr: signal to noise ratio
+    :param noise: intensity of the random noise (mean 0)
     :param N: number of elements to generate
     :return: dataset
     """
@@ -28,7 +31,7 @@ def create_gaussian_mixtures(D, snr, N):
         raise ValueError("The number of elements within the dataset must be a multiple of 4")
     if D < 2:
         raise ValueError("The number of dimensions must be at least 2")
-    if snr < 0:
+    if noise < 0:
         raise ValueError("Signal to noise ratio must be > 0")
 
     X = np.zeros((N, D))
@@ -37,7 +40,7 @@ def create_gaussian_mixtures(D, snr, N):
     for i in range(N):
         quadrant = i % 4
         Y[i] = 1 if quadrant % 2 == 0 else -1  # labels are 0 or 1
-        X[i][0], X[i][1] = centroids[quadrant] + np.random.uniform(-snr, snr, size=(2,))
+        X[i][0], X[i][1] = centroids[quadrant] + np.random.uniform(-noise, noise, size=(2,))
     return X, Y
 
 
@@ -123,6 +126,21 @@ def train_qnn(X, Y, qnn, loss, n_params, epochs):
     return specs, df
 
 
+def kernel_matrix_feature_map(feature_map, X1, X2=None):
+
+    Phi_1 = [feature_map(x) for x in X1]
+    Phi_2 = [feature_map(x) for x in X2] if X2 is not None else Phi_1
+    N = len(Phi_1)
+    M = len(Phi_2)
+
+    matrix = [0] * N * M
+    for i in range(N):
+        for j in range(M):
+            matrix[M * i + j] = float(Phi_1[i].dot(Phi_2[j].T))
+
+    return np.array(matrix).reshape((N, M))
+
+
 def calculate_ntk(X, qnn, df, X_test=None):
 
     qnn_grad = jax.grad(qnn, argnums=(1,))
@@ -132,6 +150,9 @@ def calculate_ntk(X, qnn, df, X_test=None):
         b = jnp.array(qnn_grad(x2, params))
         return float(a.dot(b.T))
 
+    def nt_feature_map(x, params):
+        return jnp.array(qnn_grad(x, params))
+
     MIN_NORM_CHANGE = 0.1
     ntk_grams = []
     ntk_gram_indexes = []
@@ -140,9 +161,11 @@ def calculate_ntk(X, qnn, df, X_test=None):
         params = row["params"]
         if len(ntk_gram_params) == 0 or i == len(df)-1 or np.linalg.norm(ntk_gram_params[-1] - params) >= MIN_NORM_CHANGE:
             if X_test is None:
-                ntk_gram = kernel_matrix(X, X, kernel=lambda x1, x2: ntk(x1, x2, params))
+                ntk_gram = kernel_matrix_feature_map(lambda x: nt_feature_map(x, params), X)
+                # ntk_gram = kernel_matrix(X, X, kernel=lambda x1, x2: ntk(x1, x2, params))
             else:
-                ntk_gram = kernel_matrix(X, X_test, kernel=lambda x1, x2: ntk(x1, x2, params))
+                ntk_gram = kernel_matrix_feature_map(lambda x: nt_feature_map(x, params), X, X_test)
+                # ntk_gram = kernel_matrix(X, X_test, kernel=lambda x1, x2: ntk(x1, x2, params))
             ntk_grams.append(ntk_gram)
             ntk_gram_indexes.append(i)
             ntk_gram_params.append(params)
@@ -783,6 +806,9 @@ def run_generalizationplots(directories, output_name):
     plt.close()
     plt.cla()
     plt.clf()
+    print("NTK: ", np.average(Y_ntk, axis=0))
+    print("PK: ", np.average(Y_pk, axis=0))
+    print("ORACLE: ", np.average(Y_oracle, axis=0))
 
 
 
@@ -1017,7 +1043,7 @@ def experiment(d, snr, n, loss, layers, epochs, directoryds, skipto, resume):
     """
     Start the experiments
     :param d: dimensionality of the data (at least 2
-    :param snr: signal to noise ratio
+    :param snr: intensity of the noise
     :param n: number of training samples (must be multiple of 4, suggested and default 16)
     :param loss: MSE (mean square error) or BCE (binary cross entropy)
     :param layers: maximum number of layers (default 20)
@@ -1026,17 +1052,6 @@ def experiment(d, snr, n, loss, layers, epochs, directoryds, skipto, resume):
     """
     print(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Experiment D={d}, snr={snr}, N={n}, loss={loss}, MAX_LAYERS={layers}, MAX_EPOCHS={epochs}")
     run_qnns(d, snr, n, loss, MAX_LAYERS=layers, MAX_EPOCHS=epochs, directory_dataset=directoryds, skipto=skipto, resume=resume)
-
-
-@main.command()
-@click.option('--directory', type=click.Path(exists=True))
-def analyze(directory):
-    """
-    Analyze the data contained in the given directory
-    :param directory: where the experiment data is saved
-    :return: nothing, everything is saved to file
-    """
-    run_analysis(directory)
 
 
 @main.command()
@@ -1054,6 +1069,17 @@ def test(directory, regenerate, m, directoryds, skipto, skip):
     :return: nothing, everything is saved to file
     """
     run_test(directory, regenerate, m, directoryds, skipto, skip)
+
+
+@main.command()
+@click.option('--directory', type=click.Path(exists=True))
+def analyze(directory):
+    """
+    Analyze the data contained in the given directory
+    :param directory: where the experiment data is saved
+    :return: nothing, everything is saved to file
+    """
+    run_analysis(directory)
 
 
 @main.command()
