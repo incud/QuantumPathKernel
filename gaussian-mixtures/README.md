@@ -8,7 +8,7 @@ https://github.com/paperswithcode/releasing-research-code
 
 This is the official implementation of [The Quantum Path Kernel](https://arxiv.org/anonymized_for_neurips_submission). 
 
-![Workflow](quantum_path_kernel_workflow.png)
+![Workflow](qpk_workflow.png)
 
 The workflow that is used to evaluate the perfomances of the Quantum Path Kernel with respect
 to the Quantum NTK is explained in details within the linked article. 
