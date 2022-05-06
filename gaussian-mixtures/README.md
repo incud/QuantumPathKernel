@@ -6,7 +6,7 @@ which is basically the best practice from PapersWithCode:
 https://github.com/paperswithcode/releasing-research-code
 )
 
-This is the official implementation of [The Quantum Path Kernel](https://arxiv.org/anonymized_for_neurips_submission). 
+This is the official implementation of [The Quantum Path Kernel](anonymized_for_neurips_submission). 
 
 ![Workflow](qpk_workflow.png)
 
