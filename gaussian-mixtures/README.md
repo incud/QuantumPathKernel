@@ -267,9 +267,17 @@ in order to estimate the error bars you can use ```generalizationplot``` command
 ```--directory <direxperiment>``` options. A sanity check to confirm all experiments have identical specifications
 is performed. The plots within the paper are generated with:
 
-    python3 quantum-path-kernel.py generalizationplot --directory experiment_snr0.10_d4_lbce_202203261440 --directory experiment_snr0.10_d4_lbce_202204111213 --directory experiment_snr0.10_d4_lbce_202204111418 --output generalization_plot_snr010_d4_lossbce
-    python3 quantum-path-kernel.py generalizationplot --directory experiment_snr0.40_d4_lbce_202203282128 --directory experiment_snr0.40_d4_lbce_202204111419 --directory experiment_snr0.40_d4_lbce_202204122056 --output generalization_plot_snr040_d4_lossbce
-    python3 quantum-path-kernel.py generalizationplot --directory experiment_snr1.00_d4_lbce_202203261741 --directory experiment_snr1.00_d4_lbce_202204120830 --directory experiment_snr1.00_d4_lbce_202204130859 --output generalization_plot_snr100_d4_lossbce
+    python3.9 quantum-path-kernel.py generalizationplot --directory experiment_snr0.10_d4_lbce_202203261440 --directory experiment_snr0.10_d4_lbce_202204111213 --directory experiment_snr0.10_d4_lbce_202204111418 --output generalization_plot_snr010_d4_lossbce
+    python3.9 quantum-path-kernel.py generalizationplot --directory experiment_snr0.40_d4_lbce_202203282128 --directory experiment_snr0.40_d4_lbce_202204111419 --directory experiment_snr0.40_d4_lbce_202204122056 --output generalization_plot_snr040_d4_lossbce
+    python3.9 quantum-path-kernel.py generalizationplot --directory experiment_snr1.00_d4_lbce_202203261741 --directory experiment_snr1.00_d4_lbce_202204120830 --directory experiment_snr1.00_d4_lbce_202204130859 --output generalization_plot_snr100_d4_lossbce
+
+for the generalization (testing) error, and:
+
+    python3.9 quantum-path-kernel.py generalizationplot --training true --directory experiment_snr0.10_d4_lbce_202203261440 --directory experiment_snr0.10_d4_lbce_202204111213 --directory experiment_snr0.10_d4_lbce_202204111418 --output training_plot_snr010_d4_lossbce
+    python3.9 quantum-path-kernel.py generalizationplot --training true --directory experiment_snr0.40_d4_lbce_202203282128 --directory experiment_snr0.40_d4_lbce_202204111419 --directory experiment_snr0.40_d4_lbce_202204122056 --output training_plot_snr040_d4_lossbce
+    python3.9 quantum-path-kernel.py generalizationplot --training true --directory experiment_snr1.00_d4_lbce_202203261741 --directory experiment_snr1.00_d4_lbce_202204120830 --directory experiment_snr1.00_d4_lbce_202204130859 --output training_plot_snr100_d4_lossbce
+
+for the training error. 
 
 ## Contributing
 

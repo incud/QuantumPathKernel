@@ -232,13 +232,14 @@ def calculate_pk(ntk_grams):
 
 def run_qnn(X, Y, loss, layers, epochs):
     """
-
-    :param X:
-    :param Y:
-    :param loss:
-    :param layers:
-    :param epochs:
-    :return:
+    Create a QNN with the given specification, calculate the QNTK and QPK.
+    :param X: training dataset points
+    :param Y: training dataset labels
+    :param loss: loss function (either bce or mse)
+    :param layers: number of layers for the QNN
+    :param epochs: number of training epochs
+    :return: the specification dictionary, the DataFrame training trace, the NTK gram matrices, the NTK gram matrix
+    indexes, the PK gram matrix
     """
     N, D = X.shape
     print(f"\n{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} - Creating QNN ({layers} layers)")
@@ -255,17 +256,17 @@ def run_qnn(X, Y, loss, layers, epochs):
 
 def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, skipto=None, resume=None):
     """
-
-    :param D:
-    :param snr:
-    :param N:
-    :param loss:
-    :param MAX_LAYERS:
-    :param MAX_EPOCHS:
-    :param directory_dataset:
-    :param skipto:
-    :param resume:
-    :return:
+    Run the simulation for many QNN
+    :param D: dimensionality of the training dataset
+    :param snr: variance of the white noise
+    :param N: number of elements of the training set
+    :param loss: loss function (either bce or mse)
+    :param MAX_LAYERS: create QNNs from 1 to MAX_LAYERS
+    :param MAX_EPOCHS: train each QNN from 1 to MAX_EPOCHS epochs
+    :param directory_dataset: optional directory for the pre-existent dataset
+    :param skipto: skip to the nth QNN
+    :param resume: resume a previously existent experiments
+    :return: None, everything is saved to file
     """
     if directory_dataset is None and resume is None:
         print("Generating new training set")
@@ -322,14 +323,14 @@ def run_qnns(D, snr, N, loss, MAX_LAYERS, MAX_EPOCHS, directory_dataset=None, sk
 
 def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=None, skip=None):
     """
-
-    :param directory:
-    :param regenerate:
-    :param n_test_samples:
-    :param directoryds:
-    :param skipto:
-    :param skip:
-    :return:
+    Run testing phase for an existing experiment
+    :param directory: directory of the experiment
+    :param regenerate: 'true' string, if you want to discard the previously generated testing dataset
+    :param n_test_samples: number of samples of the testing dataset
+    :param directoryds: optional directory of the pre-existent dataset
+    :param skipto: skip to specified layer
+    :param skip: skip specified layers
+    :return: None, everything is saved to file
     """
     specs_file_list = [x.name for x in Path(directory).iterdir() if x.is_file() and x.name.startswith("specs_")]
 
@@ -423,6 +424,11 @@ def run_test(directory, regenerate, n_test_samples, directoryds=None, skipto=Non
 
 
 def center_kernel(K):
+    """
+    Center kernel matrix
+    :param K: Gram matrix
+    :return: centered Gram matrix
+    """
     K = K.copy()
     means = K.mean(axis=0)
     K -= means[None, :]
@@ -432,6 +438,13 @@ def center_kernel(K):
 
 
 def calculate_tk_alignment(K1, K2, centered=False):
+    """
+    Calculate target-kernel alignment
+    :param K1: first gram matrix
+    :param K2: second gram matrix
+    :param centered: True (bool) to center the kernels
+    :return: Target-Kernel alignment
+    """
     if centered:
         K1 = center_kernel(K1)
         K2 = center_kernel(K1)
@@ -439,6 +452,14 @@ def calculate_tk_alignment(K1, K2, centered=False):
 
 
 def calculate_svc_accuracy(K, K_test, Y, Y_test):
+    """
+    Calculate the accuracy of the SVM model given (K, Y) as training and (K_test, Y_test) as testing set
+    :param K: training gram matrix
+    :param K_test: testing gram matrix
+    :param Y: training labels
+    :param Y_test: testing labels
+    :return: accuracy
+    """
     regr = SVC(kernel='precomputed')
     regr.fit(K.T, Y)
     Y_actual = regr.predict(K_test.T)
@@ -447,6 +468,12 @@ def calculate_svc_accuracy(K, K_test, Y, Y_test):
 
 
 def calculate_oracle_accuracy(X_, Y_):
+    """
+    Calculate oracle accuracy
+    :param X_: datapoints
+    :param Y_: labels
+    :return: accuracy
+    """
     correct = 0
     for x, y in zip(X_, Y_):
         y_actual = np.sign(x[0] * x[1])
@@ -455,20 +482,34 @@ def calculate_oracle_accuracy(X_, Y_):
 
 
 def plot_dataset(X, Y):
+    """
+    Plot the dataset image
+    :param X: points
+    :param Y: +-1 labels
+    :return: None, instatiate figure in background
+    """
     X1 = X[Y == 1]
     X2 = X[Y == -1]
     centroids = np.array([(.5, .5), (.5, -.5), (-.5, -.5), (-.5, .5)])
-    plt.scatter(X1[:, 0].tolist(), X1[:, 1].tolist(), label="First class", color='green')
-    plt.scatter(X2[:, 0].tolist(), X2[:, 1].tolist(), label="Second class", color='blue')
-    plt.scatter(centroids[:, 0].tolist(), centroids[:, 1].tolist(), label="Centroids", color='black', marker='x')
+    plt.scatter(X1[:, 0].tolist(), X1[:, 1].tolist(), label="First class", color='green', s=100)
+    plt.scatter(X2[:, 0].tolist(), X2[:, 1].tolist(), label="Second class", color='blue', s=100)
+    plt.scatter(centroids[:, 0].tolist(), centroids[:, 1].tolist(), label="Centroids", color='black', marker='x', s=200)
+    # plt.title("Gaussian Mixtures dataset (e.g. for QNN with 1 layer)")
+    plt.xticks([-1, -.5, 0, .5, 1], ['-1.0', '-0.5', '0', '0.5', '1.0'], fontsize=16)
+    plt.yticks([-1, -.5, 0, .5, 1], ['-1.0', '-0.5', '0', '0.5', '1.0'], fontsize=16)
     plt.xlim((-1, 1))
     plt.ylim((-1, 1))
-    plt.xlabel("x1")
-    plt.ylabel("x2")
-    plt.legend()
+    plt.xlabel("$x_1$", fontsize=22)
+    plt.ylabel("$x_2$", fontsize=22)
+    plt.legend(prop={'size': 16})
 
 
 def tokenizenp(s):
+    """
+    Split a string representing some NUMPY array into tokens
+    :param s: string
+    :return: tokens
+    """
     from io import BytesIO
     from tokenize import tokenize
     g = tokenize(BytesIO(s.encode('utf-8')).readline)
@@ -480,6 +521,12 @@ def tokenizenp(s):
 
 
 def tokens2np(tokens, pos=0):
+    """
+    Transform the list of tokens into a numpy array
+    :param tokens: token list
+    :param pos: starting position
+    :return: numpy array
+    """
     # print(f"Starting with {tokens} in position {pos}")
     result = []
     i = pos
@@ -509,6 +556,11 @@ def tokens2np(tokens, pos=0):
 
 
 def s2np(s):
+    """
+    Transform a string into a numpy array
+    :param s: string
+    :return: numpy array
+    """
     r, _ = tokens2np(tokenizenp(s))
     npa = np.array(r[0])
     return npa.astype('float')
@@ -518,8 +570,8 @@ def plot_model_training_loss_per_epoch(traces):
     """
     Plot the training loss of the many models
     X = epochs; Y = loss
-    :param traces:
-    :return:
+    :param traces: trace DataFrame from the training
+    :return: None, generates figure in the background
     """
     MAX_DEPTH = len(traces)
     MAX_EPOCHS = len(traces[0])
@@ -527,143 +579,47 @@ def plot_model_training_loss_per_epoch(traces):
     color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_DEPTH))
     plt.figure()
     for i, trace in enumerate(traces):
+        if i+1 not in [1, 5, 10, 15, 20]:
+            continue
         Y = trace["loss"].to_numpy().astype('float')
         Y[np.isnan(Y)] = 0
-        plt.plot(X, Y, color=color_palette[i], label=f"Depth {i+1}")
+        plt.plot(X, Y, color=color_palette[i], label=f"Depth {i+1}", linewidth=3.0)
     plt.xlim((0, MAX_EPOCHS))
-    plt.xlabel("Epochs of training")
-    plt.ylabel("Loss")
-    plt.legend()
+    plt.xticks([0, 250, 500, 750, 1000], ['0', '250', '500', '750', '1000'], fontsize=16)
+    plt.ylim((0.0, 2.0))
+    plt.yticks([0.0, 0.5, 1.0, 1.5, 2.0], ['0', '0.5', '1.0', '1.5', '2.0'], fontsize=16)
+    plt.xlabel("Epochs of training", fontsize=22)
+    plt.ylabel("Training loss", fontsize=22)
+    plt.legend(loc='upper right', prop={'size': 16})
 
 
 def plot_model_params_norm_per_epoch(traces):
     """
     Plot the norm of params of the many models
     X = epochs; Y = loss
-    :param traces:
-    :return:
+    :param traces: trace DataFrame from the training
+    :return: None, generates figure in the background
     """
     MAX_DEPTH = len(traces)
     MAX_EPOCHS = len(traces[0])
     color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_DEPTH))
     plt.figure()
     for i, trace in enumerate(traces):
+        if i+1 not in [1, 5, 10, 15, 20]:
+            continue
         init_params = trace["params"].loc[0]
         init_norm = np.linalg.norm(init_params)
         def normalise(x):
             return np.linalg.norm(x - init_params) / init_norm
         params_norm = np.vectorize(normalise)(trace["params"].to_numpy())
-        plt.plot(range(MAX_EPOCHS), params_norm, color=color_palette[i], label=f"Depth {i+1}")
-    plt.xlabel("Epochs of training")
-    plt.ylabel(r"Norm change $\frac{||\theta(n)-\theta(0)||}{||\theta(0)||}$")
-    plt.legend()
-    plt.tight_layout()
-
-
-def plot_tk_alignment_per_epoch(Y, ntk_grams_list, ntk_gram_indexes_list, pk_grams):
-    """
-    Plot the target kernel alignment per epoch
-    X = epochs; Y = loss
-    :param traces:
-    :return:
-    """
-    M = len(Y)
-    N = len(ntk_grams_list)
-    YYt = Y.reshape((M,1)).dot(Y.reshape((1,M)))
-
-    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
-    plt.figure()
-    for i, (ntk_grams, ntk_indexes) in enumerate(zip(ntk_grams_list, ntk_gram_indexes_list)):
-        x = ntk_indexes
-        y = [calculate_tk_alignment(YYt, ntk_gram) for ntk_gram in ntk_grams]
-        plt.plot(x, y, color=color_palette[i], label=f"NTK (depth {i + 1})")
-
-    color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
-    for i in range(N):
-        y = calculate_tk_alignment(YYt, pk_grams[i])
-        plt.scatter([-100], [y], label=f"PK (depth {i+1})", color=color_palette[i])
-
-    plt.xlabel("Epochs of training")
-    plt.ylabel(r"Target-Kernel alignment")
-    plt.legend()
-
-
-# def plot_accuracy_per_epoch(Y_list, ntk_grams_list, ntk_gram_indexes_list, pk_grams,
-#                             Y_test_list, ntk_test_grams_list, pk_test_grams, is_test=False):
-#     """
-#     Plot the target kernel alignment per epoch
-#     X = epochs; Y = loss
-#     :param traces:
-#     :return:
-#     """
-#     N = len(ntk_grams_list)
-#     if not is_test:
-#         Y_test_list = Y_list
-#         ntk_test_grams_list = ntk_grams_list
-#         pk_test_grams = pk_grams
-#
-#     color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
-#     plt.figure()
-#     for i in range(len(ntk_gram_indexes_list)):
-#         x = ntk_gram_indexes_list[i]
-#         y = [calculate_svc_accuracy(ntk_gram, ntk_test_gram, Y_list[i], Y_test_list[i])
-#              for ntk_gram, ntk_test_gram in zip(ntk_grams_list[i], ntk_test_grams_list[i])]
-#         plt.plot(x, y, label=f"NTK (depth {i + 1})", color=color_palette[i])
-#
-#     color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
-#     for i in range(N):
-#         y = calculate_svc_accuracy(pk_grams[i], pk_test_grams[i], Y_list[i], Y_test_list[i])
-#         plt.scatter([-100], [y], label=f"PK (depth {i+1})", color=color_palette[i])
-#
-#     plt.xlabel("Epochs of training")
-#     plt.ylabel(r"Accuracy")
-#     plt.legend()
-
-
-def plot_model_training_loss_per_depth(traces):
-    """
-    Plot the training loss of the many models
-    X = epochs; Y = loss
-    :param traces:
-    :return:
-    """
-    MAX_DEPTH = len(traces)
-    MAX_EPOCHS = len(traces[0])
-    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_EPOCHS // 100 + 1))
-    LOSSES_LIST = [traces[j]["loss"].to_numpy().astype('float') for j in range(MAX_DEPTH)]
-    plt.figure()
-    for i in range(0, MAX_EPOCHS+1, 100):
-        X = np.array(list(range(1, MAX_DEPTH+1)))
-        Y = np.array([LOSSES_LIST[j][i] for j in range(MAX_DEPTH)])
-        Y[np.isnan(Y)] = 0.0
-        plt.scatter(X, Y, color=color_palette[i // 100], label=f"Epoch {i}")
-    plt.xticks(range(1, MAX_DEPTH+1))
-    plt.xlabel("Depth")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.tight_layout()
-
-
-def plot_model_parameter_norm_per_depth(traces):
-    """
-    Plot the training loss of the many models
-    X = epochs; Y = loss
-    :param traces:
-    :return:
-    """
-    MAX_DEPTH = len(traces)
-    MAX_EPOCHS = len(traces[0])
-    color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, MAX_EPOCHS // 100 + 1))
-    get_param = lambda j, i: traces[j]["params"].loc[i]
-
-    plt.figure()
-    for i in range(0, MAX_EPOCHS+1, 100):
-        params = [np.linalg.norm(get_param(j, i) - get_param(j, 0))/np.linalg.norm(get_param(j, 0)) for j in range(MAX_DEPTH)]
-        plt.scatter(range(1, MAX_DEPTH+1), params, color=color_palette[i // 100], label=f"Epoch {i}")
-    plt.xticks(range(1, MAX_DEPTH+1))
-    plt.xlabel("Depth")
-    plt.ylabel(r"Norm change $\frac{||\theta(n)-\theta(0)||}{||\theta(0)||}$")
-    plt.legend()
+        plt.plot(range(MAX_EPOCHS), params_norm, color=color_palette[i], label=f"Depth {i+1}", linewidth=3.0)
+    plt.xlim((0, MAX_EPOCHS))
+    plt.xticks([0, 250, 500, 750, 1000], ['0', '250', '500', '750', '1000'], fontsize=16)
+    plt.ylim((0.0, 3.0))
+    plt.yticks([0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0], ['0', '0.5', '1.0', '1.5', '2.0', '2.5', '3.0'], fontsize=16)
+    plt.xlabel("Epochs of training", fontsize=22)
+    plt.ylabel(r"Norm change $\frac{||\theta(n)-\theta(0)||}{||\theta(0)||}$", fontsize=22)
+    plt.legend(loc='upper right', prop={'size': 16})
     plt.tight_layout()
 
 
@@ -671,17 +627,17 @@ def plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_grams,
                             X_test_list, Y_test_list, ntk_test_grams_list, pk_test_grams,
                             is_test=False):
     """
-
-    :param X_list:
-    :param Y_list:
-    :param ntk_grams_list:
-    :param pk_grams:
-    :param X_test_list:
-    :param Y_test_list:
-    :param ntk_test_grams_list:
-    :param pk_test_grams:
-    :param is_test:
-    :return:
+    Generate the accuracy plot for a single experiment
+    :param X_list: list of X points per depth
+    :param Y_list: list of Y labels per depth
+    :param ntk_grams_list: list of QNTK Gram matrices per depth
+    :param pk_grams: list of QPK Gram matrices per depth
+    :param X_test_list: list of X testing points per depth
+    :param Y_test_list: list of Y testing labels per depth
+    :param ntk_test_grams_list: list of testing QNTK Gram matrices per depth
+    :param pk_test_grams: list of QPK Gram matrices per depth
+    :param is_test: True if generating the testing accuracy, false if training one
+    :return: None
     """
     N = len(ntk_grams_list)
     plt.figure(figsize=(5, 5))
@@ -693,11 +649,11 @@ def plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_grams,
     # color_palette = matplotlib.colormaps["autumn"](np.linspace(0, 1, N))
     x = [i+1 for i in range(N)]
     y_ntk = [calculate_svc_accuracy(ntk_grams_list[i][-1], ntk_test_grams_list[i][-1], Y_list[i], Y_test_list[i]) for i in range(N)]
-    plt.scatter(x, y_ntk, label=f"NTK", color='red')
+    plt.scatter(x, y_ntk, label=f"QNTK", color='red')
 
     # color_palette = matplotlib.colormaps["winter"](np.linspace(0, 1, N))
     y_pk = [calculate_svc_accuracy(pk_grams[i], pk_test_grams[i], Y_list[i], Y_test_list[i]) for i in range(N)]
-    plt.scatter(x, y_pk, label=f"PK", color='blue')
+    plt.scatter(x, y_pk, label=f"QPK", color='blue')
 
     if not is_test:
         y_oracle = [calculate_oracle_accuracy(X_list[i], Y_list[i]) for i in range(N)]
@@ -705,10 +661,13 @@ def plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_grams,
         y_oracle = [calculate_oracle_accuracy(X_test_list[i], Y_test_list[i]) for i in range(N)]
     plt.scatter(x, y_oracle, label=f"Oracle", color='green')
 
-    plt.xlabel("Depth")
-    plt.ylabel(r"Accuracy")
+    plt.xlabel("Depth", fontsize=22)
+    plt.ylabel("Accuracy", fontsize=22)
+    plt.xlim((0, 20.1))
     plt.ylim((0, 1))
-    plt.legend(bbox_to_anchor=(1, 1), prop={'size': 6})
+    plt.xticks([0, 5, 10, 15, 20], ['0', '5', '10', '15', '20'], fontsize=16)
+    plt.yticks([0.0, 0.5, 1.0], ['0', '0.5', '1.0'], fontsize=16)
+    plt.legend(loc='lower right', prop={'size': 16})
     plt.tight_layout()
 
 
@@ -759,58 +718,32 @@ def run_analysis(directory):
 
     # plot dataset (the dataset generated for the first QNN)
     plot_dataset(X_list[0], Y_list[0])
-    plt.title("Gaussian Mixtures dataset (e.g. for QNN with 1 layer)")
-    dataset_info = f"Dimensionality D={D}, signal noise ratio snr={snr}, size N={N}"
-    plt.figtext(0.5, 0, dataset_info, wrap=True, horizontalalignment='center', verticalalignment='bottom', fontsize=12)
-    plt.savefig(f"{subdirectory}/dataset_plot.png", dpi=300, format='png')
+    # dataset_info = f"Dimensionality D={D}, signal noise ratio snr={snr}, size N={N}"
+    # plt.figtext(0.5, 0, dataset_info, wrap=True, horizontalalignment='center', verticalalignment='bottom', fontsize=12)
+    plt.savefig(f"{subdirectory}/dataset_plot.png", dpi=300, format='png', bbox_inches="tight")
     plt.close()
     plt.cla()
     plt.clf()
 
     # loss of the models at the various depths (last epochs)
     plot_model_training_loss_per_epoch(TRACES)
-    plt.title(f"Loss (training set) of variational models (loss={loss})")
-    plt.savefig(f"{subdirectory}/loss_in_training_per_epoch.png", dpi=300, format='png')
-    plt.close()
-    plt.cla()
-    plt.clf()
-
-    # loss of each model during the training (one single plot)
-    plot_model_training_loss_per_depth(TRACES)
-    plt.title(f"Loss (training set) of variational models (loss={loss})")
-    plt.savefig(f"{subdirectory}/loss_in_training_per_depth.png", dpi=300, format='png')
+    # plt.title(f"Loss (training set) of variational models (loss={loss})")
+    plt.savefig(f"{subdirectory}/loss_in_training_per_epoch.png", dpi=300, format='png', bbox_inches="tight")
     plt.close()
     plt.cla()
     plt.clf()
 
     # (end - start) norm change of the models at the various depths (all lines in one plot, x=epoch, y=norm change)
     plot_model_params_norm_per_epoch(TRACES)
-    plt.title(f"Norm change during training of variational models (loss={loss})")
+    # plt.title(f"Norm change during training of variational models (loss={loss})")
     plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_epoch.png", dpi=300, format='png')
     plt.close()
     plt.cla()
     plt.clf()
 
-    # norm change of each parameter, of each model
-    plot_model_parameter_norm_per_depth(TRACES)
-    plt.title(f"Norm change during training of variational models (loss={loss})")
-    plt.savefig(f"{subdirectory}/param_norm_change_in_training_per_depth.png", dpi=300, format='png')
-    plt.close()
-    plt.cla()
-    plt.clf()
-
-    # # SVM model accuracy of each NTK during the training + PK
-    # plot_accuracy_per_epoch(Y_list, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list, None, None, None, is_test=False)
-    # plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
-    # plt.savefig(f"{subdirectory}/accuracy_in_training_per_epoch.png", dpi=300, format='png')
-    # plt.close()
-    # plt.cla()
-    # plt.clf()
-
     # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
-    plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_gram_list,
-                            None, None, None, None, is_test=False)
-    plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
+    plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_gram_list, None, None, None, None, is_test=False)
+    # plt.title(f"SVM accuracy during training of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_training_per_depth.png", dpi=300, format='png')
     plt.close()
     plt.cla()
@@ -827,30 +760,21 @@ def run_analysis(directory):
     ntk_test_gram_indexes_list = [np.load(f"{directory}/ntk_test_gram_indexes_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
     pk_test_gram_list = [np.load(f"{directory}/pk_test_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
 
-    # SVM model accuracy of each NTK during the testing + PK
-    # plot_accuracy_per_epoch(Y_list, ntk_grams_list, ntk_gram_indexes_list, pk_gram_list,
-    #                         Y_test_list, ntk_test_grams_list, pk_test_gram_list, is_test=True)
-    # plt.title(f"SVM accuracy during testing of NTK and PK (loss={loss})")
-    # plt.savefig(f"{subdirectory}/accuracy_in_testing_per_epoch.png", dpi=300, format='png')
-    # plt.close()
-    # plt.cla()
-    # plt.clf()
-
     # SVM model accuracy of the last epoch NTK vs PK (varying the depth)
-    plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_gram_list,
-                            X_test_list, Y_test_list, ntk_test_grams_list, pk_test_gram_list, is_test=True)
-    plt.title(f"SVM accuracy during testing of NTK and PK (loss={loss})")
+    plot_accuracy_per_depth(X_list, Y_list, ntk_grams_list, pk_gram_list, X_test_list, Y_test_list, ntk_test_grams_list, pk_test_gram_list, is_test=True)
+    # plt.title(f"SVM accuracy during testing of NTK and PK (loss={loss})")
     plt.savefig(f"{subdirectory}/accuracy_in_testing_per_depth.png", dpi=300, format='png')
     plt.close()
     plt.cla()
     plt.clf()
 
 
-def run_generalizationplots(directories, output_name):
+def run_generalizationplots(directories, output_name, training=False):
     """
     Create the generalization error plot and save the corresponding image
     :param directories: list of directories containing the identically specified experiments
     :param output_name: filename of the output image
+    :param training: 'true' for training accuracy (not really the generalization error), 'false' otherwise
     :return: None, but saves the file at the given path
     """
 
@@ -877,6 +801,10 @@ def run_generalizationplots(directories, output_name):
         ntk_test_grams_list = [np.load(f"{directory}/ntk_test_grams_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
         pk_test_grams = [np.load(f"{directory}/pk_test_gram_{l}.npy") for l in range(1, MAX_LAYERS + 1)]
 
+        if training == 'true':
+            ntk_test_grams_list = ntk_grams_list
+            pk_test_grams = pk_grams
+
         x = [i + 1 for i in range(MAX_LAYERS)]
         y_ntk = [calculate_svc_accuracy(ntk_grams_list[i][-1], ntk_test_grams_list[i][-1], Y_list[i], Y_test_list[i]) for i in range(MAX_LAYERS)]
         y_pk = [calculate_svc_accuracy(pk_grams[i], pk_test_grams[i], Y_list[i], Y_test_list[i]) for i in range(MAX_LAYERS)]
@@ -889,18 +817,22 @@ def run_generalizationplots(directories, output_name):
     y_ntk_avg = np.average(Y_ntk, axis=0)
     y_pk_avg = np.average(Y_pk, axis=0)
     y_oracle_avg = np.average(Y_oracle, axis=0)
-    plt.scatter(x, y_ntk_avg, label=f"NTK", color='red')
+    plt.scatter(x, y_ntk_avg, label=f"QNTK", color='red')
     plt.errorbar(x, y_ntk_avg, yerr=np.std(Y_ntk, axis=0), linestyle="None", color='red')
-    plt.scatter(x, y_pk_avg, label=f"PK", color='blue')
+    plt.scatter(x, y_pk_avg, label=f"QPK", color='blue')
     plt.errorbar(x, y_pk_avg, yerr=np.std(Y_pk, axis=0), linestyle="None", color='blue')
     plt.scatter(x, y_oracle_avg, label=f"Oracle", color='green')
     plt.errorbar(x, y_oracle_avg, yerr=np.std(Y_oracle, axis=0), linestyle="None", color='green')
-    plt.xlabel("Depth")
-    plt.ylabel(r"Accuracy")
+
+    plt.xlabel("Depth", fontsize=22)
+    plt.ylabel("Accuracy", fontsize=22)
+    plt.xlim((0, 20.1))
     plt.ylim((0, 1))
-    plt.legend(bbox_to_anchor=(1, 1), prop={'size': 6})
+    plt.xticks([0, 5, 10, 15, 20], ['0', '5', '10', '15', '20'], fontsize=16)
+    plt.yticks([0.0, 0.5, 1.0], ['0', '0.5', '1.0'], fontsize=16)
+    plt.legend(loc='lower right', prop={'size': 16})
+
     plt.tight_layout()
-    plt.title(f"SVM generalization error (D={D}; snr={snr}; loss={loss})")
     plt.savefig(f"{output_name}.png", dpi=300, format='png')
     plt.close()
     plt.cla()
@@ -911,7 +843,6 @@ def run_generalizationplots(directories, output_name):
     # print("|-----------------|---------------------|--------------------|-----------------|")
     # for i in range(len(x)):
     #     print(f"| QNN ({i+1} layers) | {y_ntk_avg[i]:4.2f} | {y_pk_avg[i]:4.2f} | {y_oracle_avg[i]:4.2f} | ")
-
 
 
 def run_report(refreshplots):
@@ -1054,11 +985,16 @@ def report(refreshplots):
 @main.command()
 @click.option('--directory', type=click.Path(exists=True), multiple=True)
 @click.option('--output', type=click.Path(exists=False), required=True)
-def generalizationplot(directory, output):
+@click.option('--training', type=click.Choice(['true', 'false']), default='false', required=False)
+def generalizationplot(directory, output, training):
     """
-    Create the generalization error plots
+
+    :param directory:
+    :param output:
+    :param training:
+    :return:
     """
-    run_generalizationplots(directory, output)
+    run_generalizationplots(directory, output, training)
 
 
 if __name__ == '__main__':
