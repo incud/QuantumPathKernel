@@ -52,7 +52,7 @@ class MultiLayerPerceptronClassifier(BaseEstimator, ClassifierMixin, PredictorGr
             labels = jax.nn.one_hot(y_batch, self.num_classes)
             l2_regulariser = 0.5 * sum(jnp.sum(jnp.square(p)) for p in jax.tree_util.tree_leaves(params))
             log_likelihood = jnp.sum(labels * jax.nn.log_softmax(logits))
-            return -log_likelihood / batch_size + 1e-4 * l2_regulariser
+            return -log_likelihood / batch_size + 0.001 * l2_regulariser
 
         self.cross_entropy_loss = cross_entropy_loss
 
@@ -100,6 +100,7 @@ class MultiLayerPerceptronClassifier(BaseEstimator, ClassifierMixin, PredictorGr
         self.predict_raw_item = predict_raw_item
 
     def fit(self, X, y):
+
         self.initial_params = self.network.init(self.rng, X[0])
         self.initial_opt_state = self.optimizer.init(self.initial_params)
         self.params = self.initial_params

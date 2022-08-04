@@ -20,57 +20,16 @@ class PredictorGradientGetter(metaclass=abc.ABCMeta):
 
 class GradientKernel:
 
-    def __init__(self, trained_predictor):
+    def __init__(self, trained_predictor, sample_frequency=None):
         assert isinstance(trained_predictor, PredictorGradientGetter)
         self.trained_predictor = trained_predictor
-
-        @jax.jit
-        def get_pathk_feature_map(the_x, sample_frequency):
-            # threshold = 0.1
-            n_epochs = trained_predictor.get_epochs_trained()
-            parameters_history = [trained_predictor.get_params(i * sample_frequency) for i in range(n_epochs // sample_frequency)]
-            # parameters_norm = [jnp.linalg.norm(parameters_history[0])] + \
-            #                   [jnp.linalg.norm(parameters_history[i] - parameters_history[i - 1]) for i in range(1, n_epochs)]
-            # print(jnp.min(parameters_norm), jnp.max(parameters_norm))
-            # if threshold is not None:
-            #     parameters_history = parameters_history[parameters_norm >= threshold]
-            gradient_matrix = [trained_predictor.get_predictor_gradient(params, the_x) for params in parameters_history]
-            gradient_vec = jnp.array(jax.tree_flatten(gradient_matrix)[0]).flatten()
-            print(gradient_vec.shape)
-            return gradient_vec
-
-        self.get_pathk_feature_map = get_pathk_feature_map
-
-    # def get_ntk_feature_map(self, the_x):
-    #     init_parameters = self.trained_predictor.get_params(epoch=0)
-    #     gradient_vec = self.trained_predictor.get_predictor_gradient(init_parameters, the_x)
-    #     return gradient_vec
-    #
-    # def get_trained_ntk_feature_map(self, the_x):
-    #     last_epoch = self.trained_predictor.get_epochs_trained() - 1
-    #     last_parameters = self.trained_predictor.get_params(epoch=last_epoch)
-    #     gradient_vec = self.trained_predictor.get_predictor_gradient(last_parameters, the_x)
-    #     return gradient_vec
-
-    def path_kernel(self, X_test, X_train=None, sample_frequency=50):
-        if X_train is None:
-            X_train = X_test
-        XX1 = jnp.array([self.get_pathk_feature_map(x, sample_frequency) for x in X_test])
-        XX2 = jnp.array([self.get_pathk_feature_map(x, sample_frequency) for x in X_train])
-        print(XX1.shape, XX2.shape)
-        return XX1.dot(XX2.T)
-
-
-
-class PathKernelClassifier(BaseEstimator, ClassifierMixin):
-
-    def __init__(self, trained_predictor, sample_frequency):
-        assert isinstance(trained_predictor, PredictorGradientGetter)
+        self.sample_frequency = self.trained_predictor.get_epochs_trained() // 100 if sample_frequency is None else sample_frequency
 
         @jax.jit
         def get_pathk_feature_map(the_x):
             n_epochs = trained_predictor.get_epochs_trained()
-            parameters_history = [trained_predictor.get_params(i * sample_frequency) for i in range(n_epochs // sample_frequency)]
+            parameters_history = [trained_predictor.get_params(i * self.sample_frequency) for i in
+                                  range(n_epochs // self.sample_frequency)]
             gradient_matrix = [trained_predictor.get_predictor_gradient(params, the_x) for params in parameters_history]
             gradient_vec = jnp.array(jax.tree_flatten(gradient_matrix)[0]).flatten()
             return gradient_vec
@@ -83,10 +42,34 @@ class PathKernelClassifier(BaseEstimator, ClassifierMixin):
             print(XX1.shape, XX2.shape)
             return XX1.dot(XX2.T)
 
-        self.svm = SVC(kernel=path_kernel)
+        @jax.jit
+        def get_gradient_feature_map(the_x, epoch):
+            gradient_matrix = trained_predictor.get_predictor_gradient(trained_predictor.get_params(epoch), the_x)
+            gradient_vec = jnp.array(jax.tree_flatten(gradient_matrix)[0]).flatten()
+            return gradient_vec
 
-    def fit(self, X, y):
-        self.svm.fit(X, y)
+        def gradient_kernel(X_test, X_train=None, epoch=0):
+            if X_train is None:
+                X_train = X_test
+            XX1 = jnp.array([get_gradient_feature_map(x) for x in X_test])
+            XX2 = jnp.array([get_gradient_feature_map(x) for x in X_train])
+            print(XX1.shape, XX2.shape)
+            return XX1.dot(XX2.T)
 
-    def predict(self, X):
-        return self.svm.predict(X)
+        self.get_pathk_feature_map = get_pathk_feature_map
+        self.path_kernel = path_kernel
+        self.get_gradient_feature_map = get_gradient_feature_map
+        self.gradient_kernel = gradient_kernel
+
+    def set_sample_frequency(self, sample_frequency):
+        self.sample_frequency = sample_frequency
+
+    def path_kernel_cached(self, X_test, X_train=None, cache=None):
+        if X_train is None:
+            X_train = X_test
+        epochs = self.trained_predictor.get_epochs_trained()
+        for i in range(epochs // self.sample_frequency):
+            epoch = i * self.sample_frequency
+            if cache[epoch] is None:
+                cache[epoch] = self.gradient_kernel(X_test, X_train, epoch=epoch)
+        return np.average([cache[i] for i in range(epochs) if cache[i] is not None], axis = 0)
