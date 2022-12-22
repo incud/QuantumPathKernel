@@ -1,12 +1,6 @@
 # The Quantum Path Kernel
 
-[comment]: <> (NeurIPS requires to submit the code following the policy at:
-https://neurips.cc/public/guides/CodeSubmissionPolicy
-which is basically the best practice from PapersWithCode:
-https://github.com/paperswithcode/releasing-research-code
-)
-
-This is the official implementation of [The Quantum Path Kernel](anonymized_for_neurips_submission). 
+This is the official implementation of [The Quantum Path Kernel](https://arxiv.org/abs/). 
 
 ![Workflow](qpk_workflow.png)
 
@@ -281,6 +275,6 @@ for the training error.
 
 ## Contributing
 
-The Quantum Path Kernel © 2022 by ANONYMIZED FOR NeurIPS'22 SUBMISSION is licensed 
+The Quantum Path Kernel © 2022 is licensed 
 under [Attribution-NonCommercial-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 Please refer to the attached ```LICENSE``` file. 
